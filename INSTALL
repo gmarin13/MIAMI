@@ -1,0 +1,43 @@
+===========================
+MIAMI Building Instructions
+===========================
+
+MIAMI uses a simple build system. It has one configuration file,
+<MIAMI_ROOT>/miami.config, which must be edited to set the proper
+dependencies for the local system.
+
+1. The build system attempts to auto-discover the root directory of the
+MIAMI framework and stores this value in the MIAMI_HOME variable. If this
+auto-discovery fails, users should set the MIAMI_HOME variable manually.
+
+In addition, MIAMI has two external dependencies, PIN and binutils.
+
+2. Set PIN_HOME to point to a recent PIN kit. MIAMI has been tested with the
+most recent version of PIN, 2.13-62732 as of this writing. Slightly older
+versions are also supported, but not versions older than 2.12-58423 that
+have a different build system. PIN can be downloaded from
+http://software.intel.com/en-us/articles/pintool-downloads
+
+3. Set BINUTILS_HOME to point to the root folder of a binutils installation. 
+MIAMI links against two binutils libraries, libbfd and libiberty, so make
+sure that your binutils installation has these two libraries.
+Binutils can be downloaded from http://www.gnu.org/software/binutils/
+
+4. Optionally, you can set CC and CXX to point to your preferred GNU C and
+C++ compilers.
+
+To compile all the MIAMI components, type 'make' in the root directory:
+$ make
+
+The MIAMI source code is found in the src/ directory. During compilation, 
+object files are saved in the objs/ directory. Executables and compiled 
+libraries are installed in the bin/ subdirectory inside the MIAMI root 
+folder.
+
+MIAMI can also be installed out-of-tree. For this, invoke make with
+variable MIAMI_TARGET defined to point to your desired installation
+folder:
+$ make MIAMI_TARGET=<path_to_install_target>
+
+See doc/README.txt for instructions on using the tools and for an
+introduction to how to interpret the computed performance metrics.
