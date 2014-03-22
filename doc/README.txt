@@ -7,26 +7,27 @@ wrappers for analyzing x86 binaries.
 
 Relevant tools:
 
-cfgprof:   is a CFG profiler. The profiler attempts to statically discover
-           the control flow graph (CFG) of a routine, first time we start
-           executing the routine. During execution, it refines the
-           discovered CFG with any control flow information that could not
+cfgprof:   is a CFG profiler. The profiler statically discovers the control 
+           flow graph (CFG) of each executed routine, the first time control
+           flow enters that routine. During execution, it refines the
+           discovered CFGs with any control flow information that could not
            be discovered statically. The profiler inserts counters on select
            CFG edges and basic blocks. For this reason, it is faster than 
-           profilers that insert counters on every basic block, while being 
-           able to infer the execution of all CFG edges in addition to basic
-           block execution frequencies.
+           profilers that indiscriminately insert counters on every basic 
+           block, while at the same time being able to infer the execution 
+           frequencies of all CFG edges in addition to basic block execution
+           frequencies.
 
-memreuse:  is a tool for discovering data reuse patterns in an application
+memreuse:  is a tool for discovering data reuse patterns in applications
            and for collecting memory reuse distance histograms associated
            with each reuse pattern. Optionally, it can collect the working 
-           set footprint of each program scope.
+           set footprint of all program scopes.
 
 streamsim: is a tool for understanding data streaming behavior in 
            applications. It classifies each memory access as streaming or
            non-streaming. On a streaming access, it also computes the number
-           of live concurrent streams. It collects a histogram of this
-           information at instruction level.
+           of live streams. It collects a histogram of this information at 
+           instruction level.
 
 miami:     is a post-processing tool that consumes dynamic analysis profiles
            produced by the previous tools. It combines dynamic analysis 
@@ -38,39 +39,52 @@ Other tools:
 
 miamicfg:  is another CFG profiler, however, it uses a purely dynamic
            approach to discover the control flow graph of executed routines. 
-           It can be more resilient in the presence of codes that employ anti
-           reverse engineering techniques. However, MIAMI is not targeted at
-           such codes and one disadvantage of miamicfg is that the CFGs it
-           produces may vary greatly from run to run when different inputs
+           It can be more resilient in the presence of anti reverse
+           engineering techniques. However, MIAMI is not targeted at such 
+           codes and one disadvantage of miamicfg is that it produces CFGs
+           that may vary substantially from run to run when different inputs
            are used. miamicfg is maintained for backward compatibility, but 
            it is deprecated in favor of cfgprof. 
 
 cachesim:  is a typical LRU cache simulator with user defined line size, 
-           associativity and cache size. It is an old tool, not quite
-           integrated with the rest of the MIAMI toolkit.
+           associativity and cache size. It is an old tool, not integrated 
+           with the rest of the MIAMI toolkit, but it can be useful to get a
+           measure of conflict misses.
 
 
 Using the tools
 ---------------
 
-Each tool is executed separately. After compiling the tools, see the INSTALL
-file in the MIAMI root folder, you can either add the MIAMI bin/ directory
-to your path, or specify the path to each tool when executing it.
-Ex: <path_to_MIAMI>/bin/cfgprof [tool_args] -- <application> [app_args]
+See the INSTALL file in the MIAMI root folder for building instructions.
+Add the MIAMI bin/ directory to your path or specify the full path when
+executing a tool.
+
+The general format for executing any of the dynamic profilers is:
+$ <path_to_MIAMI>/bin/cfgprof [tool_args] -- <application> [app_args]
+
+The double dash "--" is required. It separates the wrapper options from 
+the target application and its parameters.
+
+To profile an MPI application, place the wrapper in the position where you 
+would normally specify your application binary, that is, after the mpirun 
+command:
+$ mpirun -np 16 <MAMI_ROOT>/bin/cfgprof [tool_args] -- <application> [app_args]
+
 
 The output of the CFG profiler is needed for all the analyses performed by 
 MIAMI.
 
-'memreuse' is needed only if you want to understand how data is reused, and to 
-collect memory reuse distance profiles.
+'memreuse' is needed if you want to understand how data is reused.
 
-'streamsim' is needed only if you want to understand streaming behavior.
+'streamsim' is needed if you want to understand streaming behavior in your
+application.
 
 All the dynamic profilers support multi-threaded applications. They
 automatically collect and save profile data separately for each thread.
 The post-processing tool, miami, is executed offline. Thus, it does not need
-explicit support for multi-threaded applications. A user must specify which
-output profile files to pass to the post-processing tool.
+explicit support for multi-threaded applications. A user will specify which
+output profile files, correspondig to one of the threads, to pass to the 
+post-processing tool.
 
 Getting basic help
 ------------------
@@ -84,10 +98,10 @@ Example: cfgprof -h -- ls
 
 0) Before you start
 ----------------
-You have to compile your application with source line mapping information
-enabled (flag -g for most compiler) to get MIAMI performance data mapped to
-the application source code. You can specify any optimization level in 
-addition to the -g flag.
+You should compile your application with source line mapping information
+enabled (flag -g for most compiler) to get the MIAMI performance data 
+mapped to the application source code. You can specify any optimization 
+level in addition to the -g flag.
 
 The ISPASS'14 paper "MIAMI: A Framework for Application Performance
 Diagnosis" presents an overview of the tools and provides some insight into 
@@ -101,32 +115,22 @@ execute an application using the cfgprof wrapper.
 
 <MIAMI_ROOT>/bin/cfgprof [options] -- <your_application> <your_arguments>
 
-The double dash "--" is required. It separates the wrapper options from 
-the target application and its parameters.
-
-If you start the application under MPI, place the wrapper in the position 
-where you would normally specify your application binary, that is, after 
-the mpirun command:
-
-mpirun -np 16 <MAMI_ROOT>/bin/cfgprof [options] -- <your_application> <your_arguments>
-
-No additional options are required for the wrapper. This step creates one
-.cfg file per application thread.
+No additional options are required for the CFG profiler. This step creates 
+one .cfg file per application thread.
 By default, the output files are named:
   ExecutableName-<mpi_rank>-<thread_idx>-<process_pid>.cfg
  
   - MPI ranks are numbered from 0 to N-1
   - thread indices are numbered from 0 to T-1
 
-I've seen overhead for this tool from 20% to 10x. So, it depends a lot on
+I've seen overhead for this tool from 20% to 10x. So, it depends a lot on 
 the application.
 
 You can alter the output file names using any combination of the following 
 options:
--o <output_prefix>: it will use the specified prefix instead of the 
-                    executable name. 
--no_pid  : it will not append the process pid to the output name
--no_mpi_rank : it will not append the mpi rank to the output name
+-o <output_prefix>: use the specified prefix instead of the executable name.
+-no_pid  : do not append the process pid to the output file names
+-no_mpi_rank : do not append the mpi rank to the output file names
 
 If you omit both the mpi rank and the process PID for an MPI run, threads 
 from different processes of a parallel job will attempt to write to the same 
@@ -140,20 +144,23 @@ For this, you have to execute an application using the memreuse wrapper.
 
 The same considerations as before apply. 
 
-Due to the amount of analysis performed on each memory access, this tool
-adds significant overhead, on the order of 200x time overhead.
+Due to the level of analysis performed on each memory access, this tool
+adds significant overhead, on the order of 200x time overhead when the carry
+and footprint analyses are enabled.
 
-There are a few options that are important for this step.
+There are a few options that are important for this tool.
 -B <block_size>  : specifies the block size (in bytes) for the data reuse 
                    analysis. The default value is 64, useful for x86
                    target architectures.
 -carry   : performs additional analysis to understand the carrying scope of
-           a data reuse pattern. Adds overhead, but it provides useful insight.
+           a data reuse pattern. Adds overhead, but it provides useful 
+           insight.
 -footprint  : collects footprint information for scopes. This option implies
               the '-carry' flag, so you do not have to specify both.
               It adds slighly more overhead over the '-carry' option.
 -text   : enabled by default. It causes the profile data to be saved in text 
-          mode. There is currently no support for parsing binary MRD profiles.
+          format. There is currently no support for parsing binary MRD 
+          profiles.
 
 This step creates one .mrdt (if text mode), or .mrdb (if binary mode) file
 per thread. The default name is:
@@ -161,14 +168,13 @@ per thread. The default name is:
 
 As before, you can alter the output file names using any combination of the 
 following options:
--o <output_prefix>: it will use the specified prefix instead of the 
-                    executable name. 
--no_pid  : it will not append the process pid to the output name
--no_mpi_rank : it will not append the mpi rank to the output name
+-o <output_prefix>: use the specified prefix instead of the executable name.
+-no_pid  : do not append the process pid to the output file names
+-no_mpi_rank : do not append the mpi rank to the output file names
 
 The ISPASS'08 paper "Pinpointing and Exploiting Opportunities for Enhancing
 Data Reuse" provides some insight into the concept of data reuse patterns and
-on how to interpret them. The newer ISPASS'14 paper reinforces some of those
+how to interpret them. The newer ISPASS'14 paper reinforces some of those
 insights.
 
 **
@@ -183,7 +189,7 @@ insights.
 For this, you have to execute an application using the streamsim wrapper.
 <MIAMI_ROOT>/bin/streamsim [options] -- <your_application> <your_arguments>
 
-Again, most of the same considerations as before apply. 
+Most of the same considerations as before apply. 
 
 This tool performs analysis on each memory access. Thus, it also adds
 significant overhead, on the order of 100x time overhead.
@@ -202,27 +208,28 @@ There are a few options that are important for this step.
 For a better understanding of what these options do, see the ICS'13 paper
 "Diagnosis and Optimization of Application Prefetching Performance."
 
-This step creates one .srd file per thread. The default name is:
+This step creates one .srd file per thread. The default output name is:
 
 ExecutableName-hist_size.table_size-line_size.max_stride-<mpi_rank>-<thread_idx>-<process_pid>.srd
 
 As before, you can alter the output file names using any combination of the 
 following options:
--o <output_prefix>: it will use the specified prefix instead of 
-          executable_name-hist_size.table_size-line_size.max_stride.
--no_pid  : it will not append the process pid to the output name
--no_mpi_rank : it will not append the mpi rank to the output name
+-o <output_prefix>: use the specified prefix instead of 
+              executable_name-hist_size.table_size-line_size.max_stride.
+-no_pid  : do not append the process pid to the output file names
+-no_mpi_rank : do not append the mpi rank to the output file names
 
 
 4) Post-processing the data, creating performance databases
 -----------------------------------------------------------
 For this, you have to use the 'miami' post-processing tool.
 You have to pass one .cfg file, and a number of other optional arguments.
+Note that you do not have to specify the path to the executable for this
+step. That information is taken from the profile files.
 
-<MIAMI_ROOT>/bin/miami -c <one_cfg_file> [options]
+$ <MIAMI_ROOT>/bin/miami -c <cfg_file> [options]
 
-You can run miami with -h to see all available options. There are many
-options, but typical users do not need most of them.
+Run miami with -h to see all the available options. 
 
 Some useful options:
 -mrd <mrdt_file>  : pass a memory reuse distance file. You can pass this
@@ -233,24 +240,24 @@ Some useful options:
                      concurrency results without a machine model. 
                      There is a Sandy Bridge machine model provided in
                      <MIAMI_ROOT>/share/machines/. Note that machine models
-                     are text file. You can copy an existing model and
+                     are text files. You can copy an existing model and
                      modify it, or create a new one.
 -imix  : produces an instruction mix report at loop level, in CSV format. 
          Classifies instructions into a restricted set of instruction 
          categories.
 -iwmix : another option for getting instruction mixes. Classifies
-         instructions into a fix set of instruction categories depending on 
-         the instruction type and the bit width of the instruction result. 
+         instructions into a fixed set of instruction categories depending 
+         on the instruction type and the bit width of the instruction result.
          This option provides a finer grain classification, but both options
-         generate a fix number of categories in CSV format, for easier 
+         generate a fixed number of categories in CSV format, for easier 
          post-processing with a script.
--f <floating_point_num> : specifies a minimum threshold that a program scope
-         must satify to be included into the output performance databases. 
+-f <floating_point_num> : The threashold must be between 0 and 1. Specifies 
+         a minimum threshold that a program scope must satify to be included 
+         into the output performance databases. 
          A scope must account for at least this fraction of any one of a set 
-         of primary metrics. The default threshold is 0, so all scopes are 
-         included. This option is useful when analyzing large applications 
-         where performance databases can grow into gigabytes if no minimum 
-         threshold is specified.
+         of primary metrics. The default threshold is 0, which means that all 
+         scopes are included. This option is useful when analyzing large 
+         applications where database sizes can grow to gigabytes.
 
 If a machine model is specified, miami will try to produce an instruction
 schedule for the target machine. It computes an instruction execution time 
@@ -260,12 +267,11 @@ It also computes metrics about the memory hierarchy using the memory reuse
 distance profiles, if any provided.
 
 To compute only data reuse information, but no instruction scheduling, you must 
-still specify a machine model with option -m, but you can pass the option 
--no_scheduling.
+specify a machine model with option -m and the option -no_scheduling.
 
 -o <output_prefix> : specifies the prefix used for all the output files.
-'miami' outputs multiple xml files, and possibly some .csv files. They will 
-all start with the specified prefix.
+'miami' can output multiple xml files, and possibly some .csv files. They 
+will all start with the specified prefix.
 By default, the prefix is ExecutableName-MachineName
 
 By default, the process PID is appended to the output files.
@@ -273,8 +279,8 @@ As before, you can use option -no_pid to prevent adding the process pid.
 
 
 You can process an .srd file together with other profile data, but the total 
-number of computed metrics would of course go up, making it hard to browse
-the database. You can also process just the streaming data separately.
+number of computed metrics would only go up, making it harder to browse
+the databases. You can also process just the streaming data separately.
 To process streaming concurrency profiles, you need to pass one .srd file
 and one .cfg file to the miami offline tool. No need to pass a machine file
 in this case. Pass also option -xml to have the reslts saved in XML
@@ -288,8 +294,8 @@ during compilation. It is best to redirect stderr to a file for this step.
 * We provided a sample script, <MIAMI_ROOT>/Scripts/process_miami_data.sh, 
 * that you can copy to your working directory and use as is, or modify it. 
 * It runs miami with the CFG and MRDT profiles that you collected with the
-* first script. A second run show how to process SRD data using an .srd and
-* a .cfg file, together with the -xml option.
+* first script. The script includes a second run that shows how to process 
+* SRD data using one .srd and one .cfg file, together with the -xml option.
 *
 * A second script, <MIAMI_ROOT>/Scripts/process_mrd_data.sh processes just
 * the mrd data. It skips the instruction scheduling part using the
@@ -300,11 +306,12 @@ during compilation. It is best to redirect stderr to a file for this step.
 -----------------------------------
 If you got the xml files, things are going fairly well, but you are not
 finished just yet. You need to gather all of the application's source files 
-to be able to browse the performance data mapped to application source code.
+to be able to browse the performance data mapped to the application source 
+code.
 
 Unfortunatelly, this is not a fully automated process yet, but we tried to 
-automate it as much as possible using a collection of shell scripts. 
-You must run the following shell script passing one of the generated XML
+automate parts of it using a collection of shell scripts. 
+You must run the following shell script, specifying one of the generated XML
 files as a parameter:
 <MIAMI_ROOT>/ExtractSourceFiles/copySourceFiles.sh <xml_db_file>
 
@@ -316,6 +323,11 @@ You must run this latter script on each of the xml files.
 
 for ff in <prefix>*.xml; do ./script_updatePaths.sh ${ff}; done
 
+The src/ folder together with the generated (and upated) .xml files, plus
+any eventual .csv files, represent the performance database.
+You can visualize them in place or copy them to a different machine. All the
+information is contained within the xml and csv files, and the src/ folder.
+
 
 6) Viewing the databases
 ------------------------
@@ -323,21 +335,30 @@ A java viewer is provided in <MIAMI_ROOT>/Viewer/hpcviewer.jar.
 To open an XML file:
   java -jar <MIAMI_ROOT>/Viewer/hpcviewer.jar <xml_file>
 
-For large database files, you will want to increase the maximum heap size
-of your Java virtual machine using option -Xmx.
+For large database files, you may want to increase the maximum heap size
+of your JVM using option -Xmx.
 Ex: java -Xmx1024m -jar <MIAMI_ROOT>/Viewer/hpcviewer.jar <xml_file> 
 will increase the heap size limit to 1GB.
 
+The viewer can be used on most mainstream OSes, including MacOS, Linux and 
+Windows.
 
-7) Interpretation of MIAMI metrics
-----------------------------------
+
+7) Interpreting the MIAMI metrics
+---------------------------------
 Step number (5) computes a few different xml files, representing different
 views of the performance data:
  - <prefix>.xml : is the main performance database. Reported performance 
    metrics are aggregated based on the program static structure. Thus, the
-   values reported for a routine include the contribution of the code
+   values reported for a routine represent the contribution of the code
    inside the routine, including any loop nests inside that routine. 
-   The file enables a top-down navigation of the data in the viewer. For 
+   At the highest level are the application load modules. Each module may
+   have associated several source files, and each source file may have
+   several routines. To compare routines across all modules and files, one
+   should "flatten" the scope tree twice (using the viewer button with a
+   tree picture and a red circle), to remove the entries for modules and 
+   files.
+   This file enables a top-down navigation of the data in the viewer. For 
    example, one can sort the database by a metric and then drill down to 
    find the loop that contributes the most to that particular metric.
    Most metrics are aggregated in this way. The exceptions are the number of

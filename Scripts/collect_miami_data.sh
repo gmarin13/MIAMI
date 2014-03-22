@@ -21,8 +21,8 @@ echo "Using tag: ${tag}"
 echo "Running ${arg} native ..."
 time ${arg} > log_${tag}_orig.txt 2>&1
 
-echo "Collect cfgstatic information for ${arg} ..."
-time ${MIAMI_ROOT}/bin/cfgstatic -o ${tag} -no_pid -stats -- \
+echo "Collect cfgprof information for ${arg} ..."
+time ${MIAMI_ROOT}/bin/cfgprof -o ${tag} -no_pid -stats -- \
     ${arg} > log_${tag}_cfg.txt 2>&1
 
 echo "Collect MRD information for ${arg} ..."

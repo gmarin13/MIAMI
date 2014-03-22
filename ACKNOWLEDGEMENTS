@@ -5,10 +5,6 @@ Funding for this work has been provided by:
 2011-2012: Oak Ridge National Laboratory
 before 2008: Rice University
 
-As of March 2014 when the code has been open sourced, the bulk of the MIAMI 
-code base has been written by: 
- * Gabriel Marin
-
 MIAMI includes code developed at Rice University as part of the HPCToolkit 
 and DSystem frameworks. In particular, the Tarjan interval analysis
 and the Java XML viewer were taken from HPCToolkit.
@@ -21,4 +17,7 @@ The current implementation based on analysis of x86 binaries has been under
 development since 2011. Some functionality could be ported over from the
 Sparc version, however, a majority of the code is completely new, or heavily
 modified.
+
+Authors:
+ * Gabriel Marin
 
