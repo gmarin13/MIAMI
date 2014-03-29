@@ -3217,7 +3217,7 @@ StrideSlice::SliceOut(PrivateCFG::Node* b, int uop_idx, const register_info& reg
       default:
          assert(!"Bad case");
    }
-#if 0   // try without override
+#if USE_OVERRIDE   // try without override
    if (overrideForm2 == pc)
       assert (cycle_addr == pc);
 #endif
@@ -3236,9 +3236,13 @@ StrideSlice::SliceOut(PrivateCFG::Node* b, int uop_idx, const register_info& reg
          if (cycle_cnt>1)  // index variable has a cycle of more than 
                            // one iteration
          {
-            cerr << "WARNING: stride_slice::slice_out, at pc=0x" << hex << pc
-                 << dec << " instruction part of index variable cycle that takes more than one iteration : "
-                 << cycle_cnt << ". I ignore this info for now." << endl;
+#if DEBUG_STATIC_MEMORY
+            DEBUG_STMEM(2,
+               cerr << "WARNING: stride_slice::slice_out, at pc=0x" << hex << pc
+                    << dec << " instruction part of index variable cycle that takes more than one iteration : "
+                    << cycle_cnt << ". I ignore this info for now." << endl;
+            )
+#endif
          }
       }
       if (cycle_addr==pc && cycle_op_idx==uop.idx)
@@ -3279,7 +3283,7 @@ StrideSlice::SliceOut(PrivateCFG::Node* b, int uop_idx, const register_info& reg
             }
          }
          
-#if 0   // try without override
+#if USE_OVERRIDE   // try without override
          // final_formula could be different than NULL if this pc was affected
          // by an active overrideForm2 (not for this pc). In such a case, 
          // current pc should be found in overridedPCs. Should I check all these?

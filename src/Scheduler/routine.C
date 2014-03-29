@@ -328,11 +328,15 @@ Routine::computeBaseFormulas (ReferenceSlice *rslice, CFG *g, RFormulasMap& refF
                // strides so that they are recomputed.
                if ((int)(rf->NumberOfStrides()) != node->getLevel())
                {
-                  cerr << "WARNING: Reference at address 0x" << hex << pc << dec 
-                       << " memop index " << opidx << " is at level " 
-                       << node->getLevel() << " but has " << rf->NumberOfStrides()
-                       << " stride formulas." << endl;
-                  rf->strides.clear(); // clear the existing strides
+#if DEBUG_STATIC_MEMORY
+                  DEBUG_STMEM(1,
+                     cerr << "WARNING: Reference at address 0x" << hex << pc << dec 
+                          << " memop index " << opidx << " is at level " 
+                          << node->getLevel() << " but has " << rf->NumberOfStrides()
+                          << " stride formulas." << endl;
+                     rf->strides.clear(); // clear the existing strides
+                  )
+#endif
                }
             }
             
@@ -407,9 +411,13 @@ Routine::clarifyIndirectAccessForRef(RefStrideId& rsi, GFSliceVal& _formula,
 {
    if (rsi.visited==1)  // we have seen this reference before
    {
-      cerr << "WARNING: we have a dependency cylcle when computing indirect\n"
-           << "accesses that contains memory operand at 0x" << hex << rsi.pc 
-           << dec << " / " << rsi.opidx << endl;
+#if DEBUG_STATIC_MEMORY
+      DEBUG_STMEM(1,
+         cerr << "WARNING: we have a dependency cylcle when computing indirect "
+              << "access that contains memory operand at 0x" << hex << rsi.pc 
+              << dec << " / " << rsi.opidx << endl;
+      )
+#endif
       // mark it as indirect and return 1
       _formula.set_indirect_access(GUARANTEED_INDIRECT, 0);
       return (true);
