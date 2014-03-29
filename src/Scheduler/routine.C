@@ -334,9 +334,9 @@ Routine::computeBaseFormulas (ReferenceSlice *rslice, CFG *g, RFormulasMap& refF
                           << " memop index " << opidx << " is at level " 
                           << node->getLevel() << " but has " << rf->NumberOfStrides()
                           << " stride formulas." << endl;
-                     rf->strides.clear(); // clear the existing strides
                   )
 #endif
+                  rf->strides.clear(); // clear the existing strides
                }
             }
             
