@@ -323,7 +323,7 @@ You must run this latter script on each of the xml files.
 
 for ff in <prefix>*.xml; do ./script_updatePaths.sh ${ff}; done
 
-The src/ folder together with the generated (and upated) .xml files, plus
+The src/ folder together with the generated (and updated) .xml files, plus
 any eventual .csv files, represent the performance database.
 You can visualize them in place or copy them to a different machine. All the
 information is contained within the xml and csv files, and the src/ folder.
