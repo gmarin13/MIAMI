@@ -178,8 +178,10 @@ CFG::saveToFile(FILE *fd, addrtype base_addr, LoadModule *myimg,
       // some edges may be NULL after dynamic_cast from iterator because they are
       // CFG edges of type PrivateCFG::Edge (only happens if Top Nodes are computed,
       // like when a CFG is drawn)
-      if (ee && ee->type!=MIAMI_CFG_EDGE && !ee->isProspectiveEdge() &&
-            (ee->sink()!=cfg_exit || ee->type==MIAMI_RETURN_EDGE || ee->type==MIAMI_FALLTHRU_EDGE)
+      if (ee && ee->type!=MIAMI_CFG_EDGE && 
+              (!ee->isProspectiveEdge() || 
+                    (!ee->source()->isCallSurrogate() && ee->type==MIAMI_FALLTHRU_EDGE)) &&
+              (ee->sink()!=cfg_exit || ee->type==MIAMI_RETURN_EDGE || ee->type==MIAMI_FALLTHRU_EDGE)
          )
       {
          if (ee->sink()==cfg_exit && ee->type==MIAMI_FALLTHRU_EDGE)  
