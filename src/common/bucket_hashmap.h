@@ -150,6 +150,16 @@ public:
       return (num_entries*8);
    }
    
+  /**
+   * Test if the hashtable is empty.
+   *
+   * @return true if there are no elements in the hashmap.
+   */
+   inline bool empty() const
+   {
+      return (num_elems == 0);
+   }
+   
    
   /**
    * Puts an element into hashmap.

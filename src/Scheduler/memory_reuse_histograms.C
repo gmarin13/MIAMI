@@ -208,11 +208,11 @@ BlockMRDData::ParseTextMrdFile()
                   // Get unique inst index; If we parse the file at the end, after we
                   // processed the entire CFG file, we should have seen this memory instr before.
                   // But the CFG and the MRD come from different runs, so there may be cases
-                  // when we do not have a complet overlap. Moreover, the MRD uses only a
+                  // when we do not have an exact overlap. Moreover, the MRD uses only a
                   // static understanding of the CFG, while the CFG run can resolve the 
                   // targets of indirect jumps as well
                   int32_t iidx = myImg->GetIndexForInstOffset(saddr, level);
-                  if (iidx < 0)  // no record of this scope??
+                  if (iidx < 0)  // no record of this reference??
                   {
 #if VERBOSE_DEBUG_MEMORY
                      DEBUG_MEM (1,
@@ -266,13 +266,16 @@ BlockMRDData::ParseTextMrdFile()
                      MIAMI::LoadModule *srcLM = (srcImg==img_id ? myImg : 
                                     MIAMI::mdriver.GetModuleWithIndex(srcImg));
                      if (!srcLM)
+                        // continue? We are not reading the histogram on the rest of the line ...
+                        // things will break really fast now
                         continue;
+                     
                      assert(srcLM || !"We do not have a source LoadModule with the requested index???");
                      int32_t srcidx = 0;
                      if (isInst)
                      {
                         int32_t iidx = srcLM->GetIndexForInstOffset(srcAddr, srcOp);
-                        if (iidx < 0)  // no record of this scope??
+                        if (iidx < 0)  // no record of this reference??
                         {
 #if VERBOSE_DEBUG_MEMORY
                            DEBUG_MEM (1,
@@ -297,7 +300,7 @@ BlockMRDData::ParseTextMrdFile()
                      } else  // we have scope information directly
                         srcidx = srcLM->GetIndexForScopeOffset(srcAddr, srcOp);
                      
-                     if (srcidx < 0)  // no record of this reference??
+                     if (srcidx < 0)  // no scope record for reuse source??
                      {
 #if VERBOSE_DEBUG_MEMORY
                         DEBUG_MEM (1,
@@ -463,6 +466,41 @@ ComputeMissCountsForHistogram(const HashMapCT *hist, MIAMI::MemoryHierarchyLevel
 }
 
 static void
+AggregateReuseHistograms(const HashMapCT *hist, HashMapCT &aggregHist)
+{
+   if (hist==NULL || hist->empty())
+      return;   // nothing to do
+   
+   DCVector dcArray;
+   hist->map(processBinToVector, &dcArray);
+
+   // traverse the array and add its elements to the output histogram
+   assert(! dcArray.empty());
+   DCVector::iterator dit = dcArray.begin();
+   for ( ; dit!=dcArray.end() ; ++dit)
+   {
+      aggregHist[dit->first] += dit->second;
+   }
+}
+
+HashMapCT 
+operator+ (const HashMapCT& h1, const HashMapCT& h2)
+{
+   HashMapCT sum;
+   AggregateReuseHistograms(&h1, sum);
+   AggregateReuseHistograms(&h2, sum);
+   return (sum);
+}
+
+HashMapCT& 
+operator+= (HashMapCT& h1, const HashMapCT& h2)
+{
+   AggregateReuseHistograms(&h2, h1);
+   return (h1);
+}
+
+
+static void
 ComputeStatisticsForHistogram(const HashMapCT *hist, statistics_t *stats)
 {
    DCVector dcArray;
@@ -607,7 +645,7 @@ BlockMRDData::ComputeMemoryEventsForLevel(int level, int numLevels,
             pscope = myImg->GetDefaultScope();
          }
          assert (pscope || !"I still do not have a valid pscope object??");
-         MIAMI::Trio64DoublePMap &reuseMap = pscope->getReuseFromScopeMap();
+         Trio64DoublePMap &reuseMap = pscope->getReuseFromScopeMap();
          MIAMI::TimeAccount& exclStats = pscope->getExclusiveTimeStats();
 
          MIAMI::CharDoublePMap &exclByName = pscope->getExclusiveStatsPerName ();
@@ -667,12 +705,12 @@ BlockMRDData::ComputeMemoryEventsForLevel(int level, int numLevels,
          if (iit->coldMisses > 0.001)
          {
             // add current number of misses to the reuseMap
-            MIAMI::Trio64 tempTrio (0, 0, set_id);
-            MIAMI::Trio64DoublePMap::iterator dip = reuseMap.find (tempTrio);
+            Trio64 tempTrio (0, 0, set_id);
+            Trio64DoublePMap::iterator dip = reuseMap.find (tempTrio);
             if (dip == reuseMap.end())
             {
                dip = reuseMap.insert (reuseMap.begin(), 
-                    MIAMI::Trio64DoublePMap::value_type (tempTrio,
+                    Trio64DoublePMap::value_type (tempTrio,
                                   new double[numLevels+2]));
                for (int i=0 ; i<numLevels ; ++i)
                   dip->second[i] = 0.0;
@@ -715,12 +753,12 @@ BlockMRDData::ComputeMemoryEventsForLevel(int level, int numLevels,
                if (missStats.sa_misses > 0.001)
                {
                   // add current number of misses to the reuseMap
-                  MIAMI::Trio64 tempTrio (lit->sourceId, lit->carryId, set_id);
-                  MIAMI::Trio64DoublePMap::iterator dip = reuseMap.find (tempTrio);
+                  Trio64 tempTrio (lit->sourceId, lit->carryId, set_id);
+                  Trio64DoublePMap::iterator dip = reuseMap.find (tempTrio);
                   if (dip == reuseMap.end())
                   {
                      dip = reuseMap.insert (reuseMap.begin(), 
-                          MIAMI::Trio64DoublePMap::value_type (tempTrio,
+                          Trio64DoublePMap::value_type (tempTrio,
                                         new double[numLevels+2]));
                      for (int i=0 ; i<numLevels ; ++i)
                         dip->second[i] = 0.0;
@@ -760,7 +798,7 @@ BlockMRDData::ComputeMemoryEventsForLevel(int level, int numLevels,
                   // Add the count to the PairSRDMap from MiamiDriver.
                   // These global objects are very ugly.
                   uint64_t fullDestId = MAKE_PATTERN_KEY(img_id, dest_id);
-                  MIAMI::Pair64 tempP64 (fullDestId, lit->sourceId);
+                  Pair64 tempP64 (fullDestId, lit->sourceId);
                   MIAMI::PairSRDMap::iterator srit = reusePairs.find (tempP64);
                   MIAMI::ScopeReuseData *srd = 0;
                   if (srit == reusePairs.end())
@@ -859,6 +897,96 @@ BlockMRDData::ComputeMemoryEventsForLevel(int level, int numLevels,
    return (0);
 }
 
+/* Aggregate memory reuse histograms collected at reuse-pattern level, into 
+ * scope level histograms.
+ * I also want to understand the contribution of scalar stack references to 
+ * the aggregated histograms. 
+ */
+int 
+BlockMRDData::AggregateMemoryReuseHistograms(int idx, int tot_count)
+{
+   ImgContainer::const_iterator cit = imgData.first();
+#if VERBOSE_DEBUG_MEMORY
+   DEBUG_MEM (2,
+      fprintf(stderr, "Aggregating memory reuse distance histograms for block size %d\n",
+                fileInfo.bsize);
+   )
+#endif
+   while ((bool)cit)
+   {
+      int img_id = cit.Index();
+      MIAMI::LoadModule *myImg = MIAMI::mdriver.GetModuleWithIndex(img_id);
+      assert(myImg || !"BlockMRDData::AggregateMemoryReuseHistograms: We do not have a LoadModule with the requested index???");
+
+      // iterate over the instructions, and aggregate reuse histograms
+      IIContainer::const_iterator iit = cit->instData.first();
+      while ((bool)iit)
+      {
+         int inst_id = iit.Index();
+         
+#if VERBOSE_DEBUG_MEMORY
+         DEBUG_MEM (5,
+            cerr << "Processing data for instId "
+                 << inst_id << " in image " << img_id << endl;
+         )
+#endif
+         // We can have multiple reuse patterns for each instruction;
+         // We aggregate histograms at scope level.
+         // Therefore, I need to find the scope of this instruction first.
+         int dest_id = myImg->GetScopeIndexForReference(inst_id);
+         MIAMI::ScopeImplementation *pscope = myImg->GetSIForScope(dest_id);
+         if (! pscope)
+         {
+            // print the error message only for valid Scope IDs. ID 0 is special.
+            if (dest_id)
+               fprintf(stderr, "ERROR: BlockMRDData::AggregateMemoryReuseHistograms: Couldn't find a ScopeImplementation for scopeId %d, in image %d (%s)\n",
+                    dest_id, img_id, myImg->Name().c_str());
+            // create a ScopeNotFound scope to use when we cannot find one
+            pscope = myImg->GetDefaultScope();
+         }
+         assert (pscope || !"I still do not have a valid pscope object??");
+         
+         // aggregate reuse info separately for scalar stack refs and others
+         HashMapCT &mrdHist = pscope->getMrdHistogramForScope(idx, tot_count);
+         HashMapCT &stackHist = pscope->getStackHistogramForScope(idx, tot_count);
+         bool is_stack = myImg->IsScalarStackReference(inst_id);
+         
+         if (iit->reuseVec)
+         {
+            RI_List::iterator lit = iit->reuseVec->first();
+            while ((bool)lit)  // iterate over all reuse patterns
+            {
+               if (is_stack)
+                  AggregateReuseHistograms(lit->reuseHist, stackHist);
+               else
+                  AggregateReuseHistograms(lit->reuseHist, mrdHist);
+               
+               ++ lit;
+            }  // iterate over reuse patterns
+         }  // If any reuse patterns
+
+         // Compress the histograms?? Not until I write them to disk.
+         
+         ++ iit;
+      }
+      
+      ++ cit;
+   }
+
+   return (0);
+}
+
+// Differentiate reuse patterns based on the types of the instructions accessing memory. 
+// For example, from write to read (true dependency), from read to read (no-dependency), 
+// from read to write (anti-dependency), and from write to write (dead writes). 
+// Can I make this general enough? Store those reuses in the Trio map called reuses.
+int 
+BlockMRDData::ExtractReuseByType(MrdAccessType srcType, MrdAccessType destType,
+           Trio64DoubleMap *reuseP)
+{
+
+   return (0);
+}
 
 }  /* namespace MIAMI_MEM_REUSE */
 

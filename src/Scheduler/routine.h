@@ -80,6 +80,8 @@ public:
    void FetchStaticData(FILE *fd, uint64_t offset);
    
 private:
+   bool IsScalarStackReference(addrtype pc, int memop);
+   
    const char * ComputeObjectNameForRef(addrtype pc, int32_t memop);
 
    int build_paths_for_interval(ScopeImplementation *pscope, RIFGNodeId node, 

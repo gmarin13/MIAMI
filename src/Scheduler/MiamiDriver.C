@@ -22,6 +22,9 @@
 namespace MIAMI
 {
 
+using MIAMI_MEM_REUSE::operator+;
+using MIAMI_MEM_REUSE::operator+=;
+
 ScopeImplementation* defaultSIP = 0;
 extern const char* defaultVarName;
 
@@ -80,12 +83,20 @@ MIAMI_Driver::GetModuleWithIndex(int id)
 }
 
 void
-MIAMI_Driver::parse_machine_description (const std::string& machine_file)
+MIAMI_Driver::parse_machine_description(const std::string& machine_file)
 {
    Machine* tmach = parseMachineDescription(machine_file.c_str());
 
-   if (mo->has_mrd)
+   targets.push_back(tmach);
+}
+
+void
+MIAMI_Driver::initialize_mrd_files(void)
+{
+   if (mo->has_mdl)
    {
+      Machine* tmach = targets.front();
+      
       // if we have MRD information, check if we have data for block sizes
       // equal to the line sizes in the cache hierarchy
       MemLevelAssocTable *memLevels = tmach->getMemoryLevels();
@@ -132,9 +143,17 @@ MIAMI_Driver::parse_machine_description (const std::string& machine_file)
          }
       }
       perform_memory_analysis = true;
+   } else    // no machine file specified, we all mrd files if we have to dump reuse histograms
+   if (mo->dump_mrd)
+   {
+      MrdFileMap::iterator mit = mo->mrdFiles.begin();
+      int fidx = 0;
+      for ( ; mit!=mo->mrdFiles.end() ; ++mit, ++fidx)
+      {
+         // Add a record of it to mrdData
+         mrdData.push_back(new MIAMI_MEM_REUSE::BlockMRDData(mit->second));
+      }
    }
-   
-   targets.push_back(tmach);
 }
 
 int
@@ -231,6 +250,9 @@ MIAMI_Driver::Initialize(MiamiOptions *_mo, int _pid)
     if (mo->has_mdl)  // machine file is specified
        parse_machine_description(mo->machine_file);
 
+    if (mo->has_mrd)  // we have mrd files
+       initialize_mrd_files();
+
     /* parse memory file */
     if (mo->do_memlat)  // machine file is specified
        parse_memory_latencies(mo->memory_latency_file);
@@ -279,10 +301,11 @@ MIAMI_Driver::Finalize(const std::string& outFile)
    // after processing each scope
    // gmarin, 08/06/2013: I am now able to parse MRD files for the most part.
    // If we perform memory analysis, parse the MRD files here
-   if (perform_memory_analysis) 
+   if (perform_memory_analysis || mo->dump_mrd) 
    {
       // Iterate over all MRDData elements, and parse the corresponding file.
       fprintf(stderr, "Parsing the MRD files ...\n");
+      int num_mrd_files = (int) mrdData.size();
       MIAMI_MEM_REUSE::MRDDataVec::iterator mit = mrdData.begin();
       for ( ; mit!=mrdData.end() ; ++mit)
       {
@@ -292,6 +315,18 @@ MIAMI_Driver::Finalize(const std::string& outFile)
 #if PROFILE_SCHEDULER
       MIAMIP::report_time (stderr, "Parse MRD files");
 #endif
+      // I may have multiple MRD files. I should aggregate the histograms
+      // for each file. I need to keep track of these histograms inside each
+      // program scope. Therefore, I need a "dynamic" data structure. 
+      if (mo->dump_mrd)
+      {
+         int i=0;
+         for (mit=mrdData.begin() ; mit!=mrdData.end() ; ++mit, ++i)
+         {
+            (*mit)->AggregateMemoryReuseHistograms(i, num_mrd_files);
+         }
+      }
+      
       // We filled up some detastructures inside each BlockMRDData 
       // instance.
       // Now, we need to traverse all scopes and add relevant memory 
@@ -301,7 +336,7 @@ MIAMI_Driver::Finalize(const std::string& outFile)
    }
    
    // aggregate all metrics bottom-up
-   aggregate_counts_for_scope (prog, tmach, no_fpga_acc);
+   aggregate_counts_for_scope(prog, tmach, no_fpga_acc);
 
    // print results into the specified output file
    std::string fname = mo->output_file_prefix;
@@ -445,6 +480,50 @@ MIAMI_Driver::Finalize(const std::string& outFile)
             fout = stdout;
          }
          dump_imix_histograms(fout, scope, true);
+         if (fout != stdout)
+            fclose(fout);
+      }
+   }  // do_ibins
+   
+   if (mo->dump_mrd)
+   {
+      ScopeImplementation *scope = 0;
+      // Check if we dump only the counts for a particular scope
+      if (mo->scope_name.length()>0)
+      {
+         // recursively traverse the tree of scopes and compare scope XML 
+         // names against the "scope_name."
+         scope = prog->FindScopeByName(mo->scope_name);
+      }
+      if (!scope)
+         scope = prog;
+      
+      // dump the histograms for all MRD files
+      int num_mrd_files = (int) mrdData.size();
+      MIAMI_MEM_REUSE::MRDDataVec::iterator mit = mrdData.begin();
+      for (int i=0 ; mit!=mrdData.end() ; ++mit, ++i)
+      {
+         // first, dump the histograms for non-stack refs
+         FILE *fout = fopen(((*mit)->GetFileName()+".hist").c_str(), "wt");
+         if (fout == NULL)
+         {
+            fprintf (stderr, "Cannot open output file %s.hist, writing to stdout.\n", 
+                       (*mit)->GetFileName().c_str());
+            fout = stdout;
+         }
+         dump_mrd_histograms(fout, scope, false, i, num_mrd_files);
+         if (fout != stdout)
+            fclose(fout);
+
+         // dump the histograms for stack references
+         fout = fopen(((*mit)->GetFileName()+".stack.hist").c_str(), "wt");
+         if (fout == NULL)
+         {
+            fprintf (stderr, "Cannot open output file %s.stack.hist, writing to stdout.\n", 
+                       (*mit)->GetFileName().c_str());
+            fout = stdout;
+         }
+         dump_mrd_histograms(fout, scope, true, i, num_mrd_files);
          if (fout != stdout)
             fclose(fout);
       }
@@ -613,6 +692,22 @@ MIAMI_Driver::aggregate_counts_for_scope (ScopeImplementation *pscope,
       
       // aggregate instruction mixes as well
       pscope->getInstructionMixInfo() += sci->getInstructionMixInfo();
+      
+      // aggregate MRD histograms if needed
+      if (mo->dump_mrd)
+      {
+         int num_mrd_files = (int) mrdData.size();
+         for (int i=0 ; i<num_mrd_files ; ++i)
+         {
+            // I think I can use the AggregateHistograms method from memory_reuse_histograms.
+            // Just create a + operator that invokes it.
+            pscope->getMrdHistogramForScope(i, num_mrd_files) += 
+                 sci->getMrdHistogramForScope(i, num_mrd_files);
+
+            pscope->getStackHistogramForScope(i, num_mrd_files) += 
+                 sci->getStackHistogramForScope(i, num_mrd_files);
+         }
+      }
    }
    
    // I need to use the inclusive NoDependency time when computing potential

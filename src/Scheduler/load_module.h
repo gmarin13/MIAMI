@@ -43,6 +43,7 @@ typedef MIAMIU::BucketHashMap <int32_t, int32_t, &defInt32, 128> HashIntMap;
 class LoadModule : public PrivateLoadModule
 {
    typedef std::vector<int32_t>  Int32Vector;
+   typedef std::vector<char>     CharVector;
    typedef std::vector<ScopeImplementation*>  SIVector;
    
 public:
@@ -85,7 +86,14 @@ public:
       return (refParent[iidx]);
    }
 
-   void    SetScopeIndexForReference(int32_t iidx, int32_t sidx);
+   void SetScopeIndexForReference(int32_t iidx, int32_t sidx);
+   void SetScalarStackReference(int32_t iidx); // mark a reference as scalar stack access
+   // query if a reference is scalar stack access
+   bool IsScalarStackReference(int32_t iidx) const
+   {
+      assert(iidx>=0 && iidx<(int)stackInfo.size());
+      return (stackInfo[iidx] != 0);
+   }
 
    int32_t AllocateIndexForInstPC(addrtype iaddr, int memop);
    int32_t AllocateIndexForScopePC(addrtype saddr, int level);
@@ -116,6 +124,8 @@ public:
 private:   
    int32_t nextInstIndex, nextScopeIndex, nextSetIndex;
    Int32Vector refParent;
+   CharVector stackInfo;
+   
    SIVector scopeSIPs;  // Scope Implementation Pointers (SIPs)
    BucketMapInt instMapper;
    BucketMapInt scopeMapper;

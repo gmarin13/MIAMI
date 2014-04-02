@@ -823,7 +823,8 @@ FormulaIsStackReference(GFSliceVal const &formula, coeff_t& offset)
    {
       if (it->TermType()==TY_REGISTER)
       {
-         if (is_stack_pointer_register(it->Register()))
+         if (!has_sp && is_stack_pointer_register(it->Register()) && 
+                     it->ValueNum()==1)
             has_sp = true;
          else
             return (false);

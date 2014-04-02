@@ -75,6 +75,8 @@ KNOB<double> KnobThreshold (KNOB_MODE_WRITEONCE,    "pintool",
 
 KNOB<BOOL>   KnobDetailedMetrics (KNOB_MODE_WRITEONCE,    "pintool",
     "detailed", "0", "detailed performance database: output additional performance metrics, see manual for the list of affected metrics");
+KNOB<BOOL>   KnobDumpReuseHistograms (KNOB_MODE_WRITEONCE,    "pintool",
+    "dump_mrd", "0", "dump memory reuse histograms at scope level");
 KNOB<BOOL>   KnobNoScheduling (KNOB_MODE_WRITEONCE,    "pintool",
     "no_scheduling", "0", "do not compute instruction schedules even if a machine model is provided");
 KNOB<BOOL>   KnobSkipLineMap (KNOB_MODE_WRITEONCE,    "pintool",
@@ -209,6 +211,7 @@ main (int argc, char *argv[])
     mo->addScopeName(KnobScopeName.Value());
     mo->setOutputThreshold(KnobThreshold.Value());
     mo->setDetailedMetrics(KnobDetailedMetrics.Value());
+    mo->setDumpReuseHistograms(KnobDumpReuseHistograms.Value());
     
     int numMrdFiles = KnobMrdFiles.NumberOfValues();
     if (numMrdFiles > 0)

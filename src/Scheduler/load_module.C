@@ -579,6 +579,22 @@ LoadModule::SetScopeIndexForReference(int32_t iidx, int32_t sidx)
    refParent[iidx] = sidx;
 }
 
+void
+LoadModule::SetScalarStackReference(int32_t iidx)
+{
+   assert(iidx>=0);
+   int32_t capac = stackInfo.size();
+   if (capac <= iidx)
+   {
+     if (capac < 64)
+        capac = 64;
+     while (capac <= iidx)
+        capac <<= 1;
+     stackInfo.resize(capac);  // resize initializes the values to 0 (I think)
+   }
+   stackInfo[iidx] = 1;
+}
+
 void 
 LoadModule::SetSIForScope(int child, ScopeImplementation *pscope)
 {

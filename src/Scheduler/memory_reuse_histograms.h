@@ -18,10 +18,12 @@
 #include <set>
 #include <string>
 #include "miami_types.h"
-#include "fast_hashmap.h"
+//#include "fast_hashmap.h"
+#include "bucket_hashmap.h"
 #include "self_sorted_list.h"
 #include "dense_container.h"
 #include "generic_pair.h"
+#include "generic_trio.h"
 #include "mrd_file_info.h"
 #include "MemoryHierarchyLevel.h"
 
@@ -40,15 +42,19 @@ namespace MIAMI_MEM_REUSE
    typedef uint64_t count_t;
    #define PRIdist  PRIu32
    #define PRIcount PRIu64
-//   typedef float  dist_t;
-//   #define PRIdist  "f"
 
    extern count_t defCountType;
-   typedef MIAMIU::HashMap<dist_t, count_t, &defCountType, 8> HashMapCT;
+   typedef MIAMIU::BucketHashMap<dist_t, count_t, &defCountType, 8> HashMapCT;
    typedef MIAMIU::GenericPair<dist_t, count_t> DistCountPair;
    typedef std::vector<DistCountPair> DCVector;
    typedef std::vector<float> FloatArray;
    typedef std::vector<count_t> CountArray;
+
+   typedef MIAMIU::GenericPair<uint64_t, uint64_t> Pair64;
+   typedef MIAMIU::GenericTrio<uint64_t> Trio64;
+   typedef std::map <Pair64, double*, Pair64::OrderPairs> Pair64DoublePMap;
+   typedef std::map <Trio64, double*, Trio64::OrderTrio> Trio64DoublePMap;
+   typedef std::map <Trio64, double, Trio64::OrderTrio> Trio64DoubleMap;
 
    // for each set I will collect separate reuse histograms based on the set 
    // they have reuse on. Collect cold misses separately. 
@@ -62,7 +68,7 @@ namespace MIAMI_MEM_REUSE
    // 05/29/2013 gmarin: I have four fields to differentiate between different 
    // reuse patterns: source image ID, source instruction (set) index, carry 
    // image ID, and carry scope Idx. Testing equality for all four values is 
-   // slow. I will use twp 64-bit ints to store all four fields, 32 bits for 
+   // slow. I will use two 64-bit ints to store all four fields, 32 bits for 
    // each. Define macros for accessing fields.
    //#define MAKE_PATTERN_KEY(img, inst, carry)  ((((uint64_t)(img))<<48) | (((uint64_t)(inst))<<24) | (uint64_t)(carry))
    #define MASK_32BIT  0xffffffffLL
@@ -133,6 +139,10 @@ namespace MIAMI_MEM_REUSE
    } ImageInfo;
    typedef MIAMIU::DenseContainer<ImageInfo, 4> ImgContainer;
 
+   typedef enum { 
+        MEM_ACCESS_READ = 1, 
+        MEM_ACCESS_WRITE = 2,
+   } MrdAccessType;
 
    /* BlockMRDData stores the footprint and memory reuse distance information
     * for a particular block size, the way it is collected right now. 
@@ -157,6 +167,14 @@ namespace MIAMI_MEM_REUSE
       int ParseMrdFile();
       int ComputeMemoryEventsForLevel(int level, int numLevels, MIAMI::MemoryHierarchyLevel *mhl,
                  double& totalCarried, double& totalIrregCarried, double& totalFragMisses);
+
+      int AggregateMemoryReuseHistograms(int idx, int tot_count);
+   
+      // Differentiate reuse patterns based on the types of the instructions accessing memory. 
+      // For example, from write to read (true dependency), from read to read (no-dependency), 
+      // from read to write (anti-dependency), and from write to write (dead writes). 
+      int ExtractReuseByType(MrdAccessType srcType, MrdAccessType destType,
+                 Trio64DoubleMap *reuseP);
    
    private:
       int ParseTextMrdFile();
@@ -167,6 +185,9 @@ namespace MIAMI_MEM_REUSE
       bool           fileParsed;
    };
    typedef std::vector<BlockMRDData*> MRDDataVec;
+   
+   HashMapCT operator+ (const HashMapCT& h1, const HashMapCT& h2);
+   HashMapCT& operator+= (HashMapCT& h1, const HashMapCT& h2);
    
 }  /* namespace MIAMI_MEM_REUSE */
 

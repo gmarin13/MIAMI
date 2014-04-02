@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 #include "miami_types.h"
-#include "scope_implementation.h"
+#include "memory_reuse_histograms.h"
 
 namespace MIAMI
 {
@@ -284,7 +284,7 @@ public:
 // The key of this map is a Pair of 64-bit integers, representing the source and
 // destination of a reuse pattern. For each source/dest pair, I store a map of
 // misses organized by carrier scope and source code array touched at destination.
-typedef std::map <MIAMI::Pair64, ScopeReuseData*, MIAMI::Pair64::OrderPairs> PairSRDMap;
+typedef std::map <MIAMI_MEM_REUSE::Pair64, ScopeReuseData*, MIAMI_MEM_REUSE::Pair64::OrderPairs> PairSRDMap;
 
 // In the new MIAMI, I want to also show the path from the carrier scope to the
 // source and the destination of a reuse pattern. In this case, it makes more sense to

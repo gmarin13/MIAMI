@@ -1111,6 +1111,13 @@ Routine::main_analysis(ImageScope *prog, const MiamiOptions *_mo)
                int32_t iidx = lm->AllocateIndexForInstPC(ais->first+reloc, ais->second);
                // set also the scope index for this reference
                lm->SetScopeIndexForReference(iidx, scopeId);
+               
+               // record which refs are scalar stack references
+               if (mo->mark_stack_refs) {
+                  bool stack_temp = IsScalarStackReference(ais->first, ais->second);
+                  if (stack_temp)
+                     lm->SetScalarStackReference(iidx);
+               }
             }
             // I should also group references into sets, based on their strides
             // However, I cannot do that when the scope tree is not built
@@ -1129,6 +1136,35 @@ Routine::main_analysis(ImageScope *prog, const MiamiOptions *_mo)
 
    DeleteControlFlowGraph();
    return (0);
+}
+
+bool
+Routine::IsScalarStackReference(addrtype pc, int memop)
+{
+   RFormulasMap &refFormulas = *rFormulas;
+   RefFormulas *refF = refFormulas.hasFormulasFor(pc, memop);
+   if (refF == NULL)
+      return (false);
+   
+   GFSliceVal oform = refF->base;
+   coeff_t soffset;
+   if (oform.is_uninitialized() || !FormulaIsStackReference(oform, soffset))
+      return (false);
+   
+   // is stack reference. Now check that all strides are zero and are not 
+   // marked as indirect or irregular
+   int numStrides = refF->NumberOfStrides();
+   for (int i=0 ; i<numStrides ; ++i)
+   {
+      GFSliceVal& stride = refF->strides[i];
+      if (stride.is_uninitialized() || stride.has_irregular_access() || stride.has_indirect_access())
+         return (false);
+      coeff_t valueNum;
+      ucoeff_t valueDen;
+      if (!IsConstantFormula(stride, valueNum, valueDen) || valueNum!=0)
+         return (false);
+   }
+   return (true);
 }
 
 /* recursively recover executed paths through loops and loop nests 
@@ -1401,6 +1437,13 @@ Routine::build_paths_for_interval (ScopeImplementation *pscope, RIFGNodeId node,
                      if  (rf->strides[ss].has_irregular_access() ||
                           rf->strides[ss].has_indirect_access())
                         img->SetIrregularAccessForSet(newset, ss);
+               }
+
+               // record which refs are scalar stack references
+               if (mo->mark_stack_refs) {
+                  bool stack_temp = IsScalarStackReference(ais->first, ais->second);
+                  if (stack_temp)
+                     img->SetScalarStackReference(iidx);
                }
             }  // for each mem ref
          }  // if do_ref_scope_index

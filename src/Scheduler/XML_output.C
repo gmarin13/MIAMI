@@ -759,7 +759,7 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
       if (perform_memory_analysis)
       {
          // print reuse data for this scope
-         Trio64DoublePMap& reuseMap = pscope->getReuseFromScopeMap ();
+         MIAMI_MEM_REUSE::Trio64DoublePMap& reuseMap = pscope->getReuseFromScopeMap ();
          if (!reuseMap.empty ())
          {
             // if we have any miss information, I will create /*a group for
@@ -777,7 +777,7 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             
             UI64DoublePMap dReuse, dCarrier;  // distinct reuse and carrier values
             UI64DoublePMap::iterator uit;
-            Trio64DoublePMap::iterator dpit = reuseMap.begin ();
+            MIAMI_MEM_REUSE::Trio64DoublePMap::iterator dpit = reuseMap.begin ();
             for ( ; dpit!=reuseMap.end() ; ++dpit)
             {
                double fragFactor = dpit->second[numLevels+1];
@@ -861,7 +861,7 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
          }
 
          // print carried misses data for this scope
-         Pair64DoublePMap *carryMap = &(pscope->getCarriedForScopeMap());
+         MIAMI_MEM_REUSE::Pair64DoublePMap *carryMap = &(pscope->getCarriedForScopeMap());
          if (!carryMap->empty ())
          {
             // if we have any carried miss information, I will create two groups 
@@ -876,7 +876,7 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             
             UI64DoublePMap dTo, dFrom;  // distinct To and From values
             UI64DoublePMap::iterator uit;
-            Pair64DoublePMap::iterator dpit = carryMap->begin ();
+            MIAMI_MEM_REUSE::Pair64DoublePMap::iterator dpit = carryMap->begin ();
             for ( ; dpit!=carryMap->end() ; ++dpit)
             {
                uit = dTo.find (dpit->first.first);
@@ -949,7 +949,7 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             
             UI64DoublePMap dTo, dFrom;  // distinct To and From values
             UI64DoublePMap::iterator uit;
-            Pair64DoublePMap::iterator dpit = carryMap->begin ();
+            MIAMI_MEM_REUSE::Pair64DoublePMap::iterator dpit = carryMap->begin ();
             for ( ; dpit!=carryMap->end() ; ++dpit)
             {
                uit = dTo.find (dpit->first.first);
@@ -1213,7 +1213,7 @@ MIAMI_Driver::dump_line_mapping_for_scope(FILE *_out_fd, ScopeImplementation *ps
 
 void
 MIAMI_Driver::dumpOneReuseMap (FILE *_out_fd, MIAMIU::UiUiMap &TAshortNameMap, 
-         UI64DoublePMap &singleMap, Trio64DoublePMap *pairMap, int indent, 
+         UI64DoublePMap &singleMap, MIAMI_MEM_REUSE::Trio64DoublePMap *pairMap, int indent, 
          int numLevels, double incCpuTime, bool firstIdx, bool isEncodedId)
 {
    int i;
@@ -1326,7 +1326,7 @@ MIAMI_Driver::dumpOneReuseMap (FILE *_out_fd, MIAMIU::UiUiMap &TAshortNameMap,
                // Now I have to call it recursively for the second level
                UI64DoublePMap localMap;
                UI64DoublePMap::iterator uit;
-               Trio64DoublePMap::iterator pait = pairMap->begin ();
+               MIAMI_MEM_REUSE::Trio64DoublePMap::iterator pait = pairMap->begin ();
                for ( ; pait!=pairMap->end() ; ++pait)
                {
                   uint64_t newId = 0;
@@ -1403,7 +1403,7 @@ MIAMI_Driver::dumpOneReuseMap (FILE *_out_fd, MIAMIU::UiUiMap &TAshortNameMap,
 
 void
 MIAMI_Driver::dumpOneCarryMap (FILE *_out_fd, int carryBaseIndex, 
-         UI64DoublePMap &singleMap, Pair64DoublePMap *pairMap, int indent, 
+         UI64DoublePMap &singleMap, MIAMI_MEM_REUSE::Pair64DoublePMap *pairMap, int indent, 
          int numLevels, bool firstIdx)
 {
    int i;
@@ -1455,7 +1455,7 @@ MIAMI_Driver::dumpOneCarryMap (FILE *_out_fd, int carryBaseIndex,
       {
          // Now I have to call it recursively for the second level
          UI64DoublePMap localMap;
-         Pair64DoublePMap::iterator pait = pairMap->begin ();
+         MIAMI_MEM_REUSE::Pair64DoublePMap::iterator pait = pairMap->begin ();
          for ( ; pait!=pairMap->end() ; ++pait)
          {
             uint64_t newId = 0;

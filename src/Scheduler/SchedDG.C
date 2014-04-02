@@ -11188,6 +11188,10 @@ SchedDG::minSchedulingLengthDueToResources(int& bottleneckUnit,
 
 /* Check if an instruction is a memory reference to the stack
  * with all strides zero, and no indirect or irregular stride.
+ * I added a similar method in the Routine class. I keep a record inside
+ * the LoadModule object about which references are scalar stack references 
+ * based on their unique LoadModule index. At some point I should merge
+ * this functionality, so I do not have duplicated code. FIXME
  */
 bool 
 SchedDG::Node::is_scalar_stack_reference()

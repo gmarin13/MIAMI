@@ -48,6 +48,8 @@ namespace MIAMI
       bool no_scheduling; // do not compute scheduling even if we have a machine file
       bool do_ref_scope_index; // assign unique index to scopes and mem references inside each image
       bool detailed_metrics; // output additional performance metrics with dubious value
+      bool dump_mrd;      // aggregate and output MRD histograms at scope level
+      bool mark_stack_refs; // record which stack refs are scalar stack accesses
       
       double threshold;   // a scope must contribute more than this fraction of any performance metric 
                           // to be included in the output database.
@@ -88,6 +90,9 @@ namespace MIAMI
          no_scheduling = false;
          do_ref_scope_index = false;
          detailed_metrics = false;
+         dump_mrd = false;
+         mark_stack_refs = false;
+         
          debug_parts = 1;
          
          threshold = 0.0;
@@ -104,9 +109,14 @@ namespace MIAMI
             fprintf(stderr, "Some of the specified options require a CFG file. Repeat run with a valid CFG file.\n");
             is_good = false;
          }
-         if ((do_scheduling || has_mrd) && !has_mdl) {
+         if ((do_scheduling || (has_mrd && !dump_mrd)) && !has_mdl) {
             // we must compute instruction schedule but we lack a machine description file
             fprintf(stderr, "Some of the specified options require a machine description file. Repeat run with a valid MDF file.\n");
+            is_good = false;
+         }
+         if (dump_mrd && !do_scheduling && !has_mrd) {
+            // we must dump reuse histograms, but no mrd files were provided
+            fprintf(stderr, "We were asked to dump the reuse histograms at scope level, but no MRD file was specified on the command line.\n");
             is_good = false;
          }
          if ((do_scheduling || do_ideal_sched || do_streams || has_mrd || do_ref_scope_index) && !do_scopetree) {
@@ -141,6 +151,7 @@ namespace MIAMI
          if (mfile.length()) {
             machine_file = mfile;
             has_mdl = true;
+            dump_xml = true;
             if (! no_scheduling)
             {
                do_scheduling = true;
@@ -149,10 +160,10 @@ namespace MIAMI
                units_usage = true;
                do_staticmem = true;
                do_ref_scope_index = true;
+               mark_stack_refs = true;
                
                do_cfgcounts = true;
                do_idecode = true;
-               dump_xml = true;
             }
          }
       }
@@ -181,6 +192,14 @@ namespace MIAMI
       
       void setDetailedMetrics(bool _dm) {
          detailed_metrics = _dm;
+      }
+
+      void setDumpReuseHistograms(bool _dump) {
+         dump_mrd = _dump;
+         if (_dump) {
+            mark_stack_refs = true;
+            do_ref_scope_index = true;
+         }
       }
 
       bool DetailedMetrics() const {
@@ -296,7 +315,7 @@ namespace MIAMI
                      do_staticmem = true;
                      do_cfgcounts = true;
                      do_idecode = true;
-                     dump_xml = true;
+//                     dump_xml = true;
                   }
                }
                fclose(fd);
@@ -313,6 +332,8 @@ namespace MIAMI
             do_cfgcounts = true;
             do_idecode = true;
             do_staticmem = true;
+            do_ref_scope_index = true;
+            mark_stack_refs = true;
             stream_file = sfile;
          }
       }

@@ -140,12 +140,16 @@ public:
 
 private:
    void parse_machine_description (const std::string& machine_file);
+   void initialize_mrd_files(void);
    
    void dump_xml_output (FILE* _out_fd, ScopeImplementation *pscope, const std::string& title,
              double threshold = 0.0, bool flat_data = false);
    void dump_stream_count_histograms(FILE *fout, ScopeImplementation *pscope);
    void dump_imix_histograms(FILE *fout, ScopeImplementation *pscope, bool use_width=false);
    void dump_ibins_histograms(FILE *fout, ScopeImplementation *pscope);
+   
+   void dump_mrd_histograms(FILE *fout, ScopeImplementation *pscope,
+               bool use_stack, int idx, int nfiles);
    
    void aggregate_counts_for_scope (ScopeImplementation *pscope,
              Machine *tmach, int no_fpga_acc);
@@ -173,12 +177,13 @@ private:
             bool flat_data, bool top_scope);
 
    void dumpOneReuseMap (FILE *_out_fd, MIAMIU::UiUiMap &TAshortNameMap,
-            UI64DoublePMap &singleMap, Trio64DoublePMap *pairMap, int indent,
-            int numLevels, double incCpuTime, bool firstIdx, bool isEncodedId);
+            UI64DoublePMap &singleMap, MIAMI_MEM_REUSE::Trio64DoublePMap *pairMap, 
+            int indent, int numLevels, double incCpuTime, bool firstIdx, 
+            bool isEncodedId);
 
    void dumpOneCarryMap (FILE *_out_fd, int carryBaseIndex,
-            UI64DoublePMap &singleMap, Pair64DoublePMap *pairMap, int indent,
-            int numLevels, bool firstIdx);
+            UI64DoublePMap &singleMap, MIAMI_MEM_REUSE::Pair64DoublePMap *pairMap, 
+            int indent, int numLevels, bool firstIdx);
 
    void dump_line_mapping_for_scope(FILE *_out_fd, ScopeImplementation *pscope, int indent);
 

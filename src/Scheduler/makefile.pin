@@ -31,7 +31,7 @@ SCHEDULER_OBJS = CFG.o routine.o load_module.o debug_scheduler.o \
   TemplateExecutionUnit.o UnitRestriction.o BitSet.o BypassRule.o prog_scope.o \
   machdesc.tab.o machdesc.lex.o MiamiDriver.o memory_latency_histograms.o \
   path_id.o CycleSetDAG.o SchedDG.o DGBuilder.o stream_reuse_histograms.o \
-  XML_output.o memory_reuse_histograms.o TemplateInstantiate.o
+  XML_output.o memory_reuse_histograms.o mrd_histograms.o TemplateInstantiate.o
   
 PIN_COMMON_OBJS = instruction_decoding.o
 COMMON_OBJS = PrivateCFG.o printable_class.o private_routine.o Assertion.o BaseDominator.o \

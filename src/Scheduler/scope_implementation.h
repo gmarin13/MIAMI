@@ -23,16 +23,11 @@
 #include "reg_sched_info.h"
 #include "charless.h"
 #include "stream_reuse_histograms.h"
+#include "memory_reuse_histograms.h"
 #include "generic_pair.h"
-#include "generic_trio.h"
 
 namespace MIAMI
 {
-
-typedef MIAMIU::GenericPair<uint64_t, uint64_t> Pair64;
-typedef MIAMIU::GenericTrio<uint64_t> Trio64;
-typedef std::map <Pair64, double*, Pair64::OrderPairs> Pair64DoublePMap;
-typedef std::map <Trio64, double*, Trio64::OrderTrio> Trio64DoublePMap;
 
 typedef std::map <MIAMIU::UIPair, RSIList, MIAMIU::UIPair::OrderPairs> PairRSIMap;
 typedef std::map <const char*, double*, CharLess> CharDoublePMap;
@@ -61,6 +56,11 @@ public:
       LIcarriedMisses = 0;
       scopeId = 0;
       instCounts = 0;
+      // allocate mrd histograms on demand
+      mrdHist = 0;
+      stackHist = 0;
+      mrd_hist_count = 0;
+      stack_hist_count = 0;
 #if 0
       if (_stype==LOOP_SCOPE || _stype==ROUTINE_SCOPE)
          loop_node = new CFG::Node(NULL, _key, 0, CFG::MIAMI_INNER_LOOP);
@@ -71,6 +71,11 @@ public:
 
    virtual ~ScopeImplementation()
    {
+      if (mrdHist)
+         delete[] mrdHist;
+      if (stackHist)
+         delete[] stackHist;
+      
       if (paths)
       {
          for(BPMap::iterator bit=paths->begin() ; bit!=paths->end() ; bit++)
@@ -86,11 +91,11 @@ public:
       for ( ; nit!=loopNodes.end() ; ++nit)
          delete (nit->second);
       
-      Trio64DoublePMap::iterator tit = reuseFromScope.begin ();
+      MIAMI_MEM_REUSE::Trio64DoublePMap::iterator tit = reuseFromScope.begin ();
       for ( ; tit!=reuseFromScope.end() ; ++tit)
          delete[] (tit->second);
       reuseFromScope.clear ();
-      Pair64DoublePMap::iterator dit = carriedForScope.begin ();
+      MIAMI_MEM_REUSE::Pair64DoublePMap::iterator dit = carriedForScope.begin ();
       for ( ; dit!=carriedForScope.end() ; ++dit)
          delete[] (dit->second);
       carriedForScope.clear ();
@@ -126,22 +131,55 @@ public:
    inline float& NumLoads()     { return (num_loads); }
    inline float& NumStores()    { return (num_stores); }
 
-   inline void addExitCount (unsigned long long _cnt) { exit_count += _cnt; }
-   inline float getExitCount ()                       { return (exit_count); }
-   inline void addExecCount (unsigned long long _cnt) { total_count += _cnt; }
-   inline unsigned long long getTotalCount ()         { return (total_count); }
+   inline void addExitCount(unsigned long long _cnt) { exit_count += _cnt; }
+   inline float getExitCount()                       { return (exit_count); }
+   inline void addExecCount(unsigned long long _cnt) { total_count += _cnt; }
+   inline unsigned long long getTotalCount()         { return (total_count); }
    
-   inline TimeAccount& getInclusiveTimeStats ()  { return (statsInc); }
-   inline TimeAccount& getExclusiveTimeStats ()  { return (statsExc); }
-   inline TimeAccount* getExclusiveTimeStatsAddress ()  { return (&statsExc); }
-   inline Trio64DoublePMap& getReuseFromScopeMap ()  { return (reuseFromScope); }
-   inline Pair64DoublePMap& getCarriedForScopeMap () { return (carriedForScope); }
-   inline Pair64DoublePMap& getLICarriedForScopeMap () { return (LIcarriedForScope); }
-   
-   inline MIAMIU::UiDoubleMap& getFragFactorsForScope ()   { return (fragFactors); }
+   inline TimeAccount& getInclusiveTimeStats()  { return (statsInc); }
+   inline TimeAccount& getExclusiveTimeStats()  { return (statsExc); }
+   inline TimeAccount* getExclusiveTimeStatsAddress()  { return (&statsExc); }
+   inline MIAMI_MEM_REUSE::Trio64DoublePMap& getReuseFromScopeMap()  { return (reuseFromScope); }
+   inline MIAMI_MEM_REUSE::Pair64DoublePMap& getCarriedForScopeMap() { return (carriedForScope); }
+   inline MIAMI_MEM_REUSE::Pair64DoublePMap& getLICarriedForScopeMap() { return (LIcarriedForScope); }
 
-   inline CharDoublePMap& getInclusiveStatsPerName (){ return (inclusiveNameVals); }
-   inline CharDoublePMap& getExclusiveStatsPerName (){ return (exclusiveNameVals); }
+   inline MIAMI_MEM_REUSE::HashMapCT& getMrdHistogramForScope(int idx, int ncount) 
+   { 
+      assert(idx>=0 && idx<ncount);
+      if (mrdHist == NULL)  // first time we are asked for it
+      {
+         mrd_hist_count = ncount;
+         mrdHist = new MIAMI_MEM_REUSE::HashMapCT[mrd_hist_count];
+      }
+      if (mrdHist == NULL)  // allocation failed
+      {
+         fprintf(stderr, "Cannot allocate memory for MRD histograms %d/%d for scope %s\n",
+             idx, ncount, ToString().c_str());
+         assert(! "memory allocation for MRD histograms failed");
+      }
+      return (mrdHist[idx]); 
+   }
+   inline MIAMI_MEM_REUSE::HashMapCT& getStackHistogramForScope(int idx, int ncount) 
+   {
+      assert(idx>=0 && idx<ncount);
+      if (stackHist == NULL)  // first time we are asked for it
+      {
+         stack_hist_count = ncount;
+         stackHist = new MIAMI_MEM_REUSE::HashMapCT[stack_hist_count];
+      }
+      if (stackHist == NULL)  // allocation failed
+      {
+         fprintf(stderr, "Cannot allocate memory for stack MRD histograms %d/%d for scope %s\n",
+             idx, ncount, ToString().c_str());
+         assert(! "memory allocation for stack MRD histograms failed");
+      }
+      return (stackHist[idx]); 
+   }
+   
+   inline MIAMIU::UiDoubleMap& getFragFactorsForScope()   { return (fragFactors); }
+
+   inline CharDoublePMap& getInclusiveStatsPerName(){ return (inclusiveNameVals); }
+   inline CharDoublePMap& getExclusiveStatsPerName(){ return (exclusiveNameVals); }
 
    inline void addInnerSerialMemLat(float _cnt)  { serialMemLat += _cnt; }
    inline float getSerialMemLat() const          { return (serialMemLat); }
@@ -182,11 +220,11 @@ public:
 //   inline CFG::Node* LoopNode() const  { return (loop_node); }
    inline ICIMap& getInstructionMixInfo()  { return (imixInfo); }
    
-   void AddCarriedMisses(int iter, Pair64& tempP64, int level, int numLevels,
+   void AddCarriedMisses(int iter, MIAMI_MEM_REUSE::Pair64& tempP64, int level, int numLevels,
                         double missCount)  //, double fragF, bool is_irreg)
    {
       double **pCarried;
-      Pair64DoublePMap *pCarriedMap;
+      MIAMI_MEM_REUSE::Pair64DoublePMap *pCarriedMap;
       int j;
       
       if (iter)  // it is loop carried
@@ -207,14 +245,14 @@ public:
       }
       (*pCarried)[level] += missCount;
 
-      Pair64DoublePMap::iterator pdit = pCarriedMap->find (tempP64);
+      MIAMI_MEM_REUSE::Pair64DoublePMap::iterator pdit = pCarriedMap->find (tempP64);
       double *vals = 0;
       if (pdit == pCarriedMap->end ())
       {
          vals = new double [numLevels];
          for (j=0 ; j<numLevels ; ++j)
             vals[j] = 0.0;
-         pCarriedMap->insert (Pair64DoublePMap::value_type (tempP64, vals));
+         pCarriedMap->insert (MIAMI_MEM_REUSE::Pair64DoublePMap::value_type (tempP64, vals));
       } else
          vals = pdit->second;
       vals[level] += missCount;
@@ -295,20 +333,24 @@ private:
    TimeAccount statsInc;
    TimeAccount statsExc;
    
-   Trio64DoublePMap reuseFromScope;  // collect misses for all levels based on
+   MIAMI_MEM_REUSE::Trio64DoublePMap reuseFromScope;  // collect misses for all levels based on
                                      // the source of the reuse and the carrier
                                      // the third key is the set index
-   Pair64DoublePMap carriedForScope; // collect misses carried by this scope
+   MIAMI_MEM_REUSE::Pair64DoublePMap carriedForScope; // collect misses carried by this scope
                                      // based on the source and target of the
                                      // reuse; contains only loop carried reuses
                                      // and is valid only for loops
-   Pair64DoublePMap LIcarriedForScope; // collect misses carried by this scope
+   MIAMI_MEM_REUSE::Pair64DoublePMap LIcarriedForScope; // collect misses carried by this scope
                                      // based on the source and target of the
                                      // reuse; contains only loop independent 
                                      // reuses
    MIAMIU::PairDoubleMap *instCounts;// collect execution frequencies for all 
                                      // combinations of instr type and bit width
    MIAMIU::UiDoubleMap fragFactors;  // stores fragmentation factor for sets
+   
+   MIAMI_MEM_REUSE::HashMapCT *mrdHist;   // stores mrd histogram for scope
+   MIAMI_MEM_REUSE::HashMapCT *stackHist; // stores mrd histogram for stack references in scope
+   int mrd_hist_count, stack_hist_count;
    
    CharDoublePMap inclusiveNameVals;
    CharDoublePMap exclusiveNameVals;
