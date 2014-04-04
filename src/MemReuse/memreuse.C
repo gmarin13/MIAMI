@@ -53,6 +53,8 @@ KNOB<UINT32>   KnobVerbosityLevel (KNOB_MODE_WRITEONCE,    "pintool",
     "debug", "0", "verbosity of debugging messages: 0 - off, 1 - initialization, 2 - add static analysis messages, 3 - add instrumentation events, 4 - add trace of dynamic events (very verbose), 5 - add event processing messages (extremely verbose)");
 KNOB<BOOL>   KnobTextMode (KNOB_MODE_WRITEONCE,    "pintool",
     "text", "1", "output profile data in text mode");
+KNOB<BOOL>   KnobStackRefs (KNOB_MODE_WRITEONCE,    "pintool",
+    "stack", "0", "collect data for scalar stack accesses. Scalar stack accesses are normally excluded from the data reuse analysis.");
 
 KNOB<BOOL>   KnobNoPid (KNOB_MODE_WRITEONCE,    "pintool",
     "no_pid", "0", "do not append process PID to output file name");
@@ -95,6 +97,7 @@ namespace MIAMI_MEM_REUSE
    bool use_sampling = false;
    bool use_scratch_reg = false;
    bool compute_carry = false;
+   bool profile_stack = false;
    
    BUFFER_ID bufId;
    TLS_KEY   thr_key;
@@ -245,6 +248,14 @@ VOID AnalyzeTrace(TRACE trace, VOID *v)
             rref->CfgToDot();
          robj = rref;
          myimg->AddRoutine(robj);
+         
+         // if we do not profile stack accesses (default mode now), we must use 
+         // static analysis to understand which references are scalar stack 
+         // accesses.
+         // Invoke this analysis from within DetermineInstrumentationPoints where
+         // I construct the Tarjan Intervals already.
+//         if (! profile_stack)
+//            robj->IdentifyStackAccesses();
 
          // We must insert instrumentation before and after a scope, also on an
          // iteration change, and of course, on every memory micro-op.
@@ -255,7 +266,7 @@ VOID AnalyzeTrace(TRACE trace, VOID *v)
          // the places where we must insert the scope markers.
          // On a TRACE callback, I must check if this is a scope entry/exit/iter
          // change.
-         robj->DetermineInstrumentationPoints();
+         robj->DetermineInstrumentationPoints(! profile_stack);
          
          // I record the places where I have to insert instrumentation events, 
          // in separate data structures inside the load module.
@@ -336,6 +347,10 @@ VOID AnalyzeTrace(TRACE trace, VOID *v)
             // Iterate over each memory operand of the instruction.
             for (UINT32 memOp=0 ; memOp<memOperands ; ++memOp)
             {
+               // skip over scalar stack accesses if not explicitly asked to profile them
+               if (!profile_stack && myimg->IsScalarStackAccess(iaddr, memOp))
+                  continue;
+               
                if (INS_MemoryOperandIsRead(ins, memOp))
                {
                   MIAMI::IntPair& ipair = myimg->getInstIndexAndScope (iaddr, memOp);
@@ -375,9 +390,13 @@ VOID AnalyzeTrace(TRACE trace, VOID *v)
                }  /* if the operand is Read */
             }  /* loop over memory operands */
 
-            // Repeat the loop over memory operands for stores, The execute after all the loads
+            // Repeat the loop over memory operands for stores, They execute after all the loads
             for (UINT32 memOp=0 ; memOp<memOperands ; ++memOp)
             {
+               // skip over scalar stack accesses if not explicitly asked to profile them
+               if (!profile_stack && myimg->IsScalarStackAccess(iaddr, memOp))
+                  continue;
+               
                if (INS_MemoryOperandIsWritten(ins, memOp))
                {
                   MIAMI::IntPair& ipair = myimg->getInstIndexAndScope (iaddr, memOp);
@@ -630,6 +649,7 @@ main (int argc, char *argv[])
     MIAMI_MEM_REUSE::profileErrors = KnobScopeErrors.Value();
     MIAMI_MEM_REUSE::verbose_level = KnobVerbosityLevel.Value();
     MIAMI_MEM_REUSE::text_mode_output = KnobTextMode.Value();
+    MIAMI_MEM_REUSE::profile_stack = KnobStackRefs.Value();
     
     if (KnobLineSize.Value()<4 || !MIAMIU::IsPowerOf2(KnobLineSize.Value()))
     {

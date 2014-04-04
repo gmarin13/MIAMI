@@ -86,11 +86,6 @@ public:
       } else
          return (false);
    }
-#if 0
-   bool HasCallReturnAt(addrtype pc) {
-      return (returns.find(pc)!=returns.end());
-   }
-#endif
    bool HasTraceStartAt(addrtype pc) {
       return (traces.find(pc)!=traces.end());
    }
@@ -123,12 +118,6 @@ public:
    {
       return (&entries[pc]);
    }
-#if 0
-   inline uint64_t* ReturnCounter(addrtype pc)
-   {
-      return (&returns[pc]);
-   }
-#endif
    inline uint64_t* TraceCounter(addrtype pc)
    {
       return (&traces[pc]);
@@ -139,13 +128,6 @@ public:
       if (entries.find(pc)==entries.end())
          entries.insert(EntryMap::value_type(pc, 0));
    }
-#if 0
-   inline void addReturnCounter(addrtype pc)
-   {
-      if (returns.find(pc)==returns.end())
-         returns.insert(EntryMap::value_type(pc, 0));
-   }
-#endif
    inline void addTraceCounter(addrtype pc)
    {
       if (traces.find(pc)==traces.end())
@@ -181,13 +163,26 @@ public:
 
    PrivateCFG::Node* FindCFGNodeAtAddress(addrtype pc);
 
+   uint64_t SaveStaticData(FILE *fd);
+   void FetchStaticData(FILE *fd, uint64_t offset);
+   
 protected:
+   void ComputeBaseFormulas(ReferenceSlice *rslice, PrivateCFG *g, RFormulasMap& refFormulas);
+   
+   void ComputeStrideFormulasForRoutine(RIFGNodeId node, TarjanIntervals *tarj, 
+            MiamiRIFG* mCfg, int marker, int level, ReferenceSlice *rslice);
+   void ComputeStrideFormulasForScope(StrideSlice &sslice, ReferenceSlice *rslice, 
+               RIFGNodeId node, TarjanIntervals *tarj, MiamiRIFG* mCfg, int level,
+               RFormulasMap& refFormulas, RefInfoMap& memRefs);
+
+   bool ClarifyIndirectAccessForRef(RefStrideId& rsi, GFSliceVal& _formula, 
+               RFormulasMap& refFormulas, RefInfoMap& memRefs);
+
    addrtype start_addr;
    addrtype start_offset;
    std::string name;
    usize_t size;
    EntryMap entries;   // store the entry points for the routine
-//   EntryMap returns;   // store the points after call-sites for the routine
    EntryMap traces;    // store trace starts
 
    BBMap _blocks;

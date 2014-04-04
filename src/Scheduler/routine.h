@@ -76,9 +76,6 @@ public:
       return (*rFormulas); 
    }
    
-   uint64_t SaveStaticData(FILE *fd);
-   void FetchStaticData(FILE *fd, uint64_t offset);
-   
 private:
    bool IsScalarStackReference(addrtype pc, int memop);
    
@@ -98,17 +95,6 @@ private:
    void compute_lineinfo_for_block(ScopeImplementation *pscope, CFG::Node* b);
    void decode_instructions_for_block (ScopeImplementation *pscope, CFG::Node *b, int64_t count,
            AddrIntSet& memRefs, RefIClassMap& refsClass);
-
-   void computeBaseFormulas(ReferenceSlice *rslice, CFG *g, RFormulasMap& refFormulas);
-   
-   void computeStrideFormulasForRoutine(RIFGNodeId node, TarjanIntervals *tarj, 
-            MiamiRIFG* mCfg, int marker, int level, ReferenceSlice *rslice);
-   void computeStrideFormulasForScope(StrideSlice &sslice, ReferenceSlice *rslice, 
-               RIFGNodeId node, TarjanIntervals *tarj, MiamiRIFG* mCfg, int level,
-               RFormulasMap& refFormulas, RefInfoMap& memRefs);
-
-   bool clarifyIndirectAccessForRef(RefStrideId& rsi, GFSliceVal& _formula, 
-               RFormulasMap& refFormulas, RefInfoMap& memRefs);
 
    static StringList includePatterns, excludePatterns;
    addrtype reloc_offset;
