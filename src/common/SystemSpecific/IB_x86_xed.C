@@ -112,6 +112,7 @@
     case XED_ICLASS_DPPS:               // SSE
         return IB_mult; // ??? computes dot-product...
         
+    case XED_ICLASS_VEXTRACTI128:       // AVX2
     case XED_ICLASS_VEXTRACTF128:       // AVX
     case XED_ICLASS_VEXTRACTPS:         // AVX
     case XED_ICLASS_EXTRACTPS:          // SSE
@@ -136,6 +137,7 @@
     case XED_ICLASS_HSUBPS:             // SSE
         return IB_add;
         
+    case XED_ICLASS_VINSERTI128:        // AVX2
     case XED_ICLASS_VINSERTF128:        // AVX
     case XED_ICLASS_VINSERTPS:          // AVX
     case XED_ICLASS_INSERTPS:           // SSE
@@ -323,6 +325,88 @@
     case XED_ICLASS_VPMADDWD:           // AVX
     case XED_ICLASS_PMADDUBSW:          // MMX SSE
     case XED_ICLASS_PMADDWD:            // MMX SSE
+
+    case XED_ICLASS_VFMADD132PD:        // AVX2
+    case XED_ICLASS_VFMADD132PS:        // AVX2
+    case XED_ICLASS_VFMADD132SD:        // AVX2
+    case XED_ICLASS_VFMADD132SS:        // AVX2
+    case XED_ICLASS_VFMADD213PD:        // AVX2
+    case XED_ICLASS_VFMADD213PS:        // AVX2
+    case XED_ICLASS_VFMADD213SD:        // AVX2
+    case XED_ICLASS_VFMADD213SS:        // AVX2
+    case XED_ICLASS_VFMADD231PD:        // AVX2
+    case XED_ICLASS_VFMADD231PS:        // AVX2
+    case XED_ICLASS_VFMADD231SD:        // AVX2
+    case XED_ICLASS_VFMADD231SS:        // AVX2
+    case XED_ICLASS_VFMADDPD:           // AVX2
+    case XED_ICLASS_VFMADDPS:           // AVX2
+    case XED_ICLASS_VFMADDSD:           // AVX2
+    case XED_ICLASS_VFMADDSS:           // AVX2
+    case XED_ICLASS_VFMADDSUB132PD:     // AVX2
+    case XED_ICLASS_VFMADDSUB132PS:     // AVX2
+    case XED_ICLASS_VFMADDSUB213PD:     // AVX2
+    case XED_ICLASS_VFMADDSUB213PS:     // AVX2
+    case XED_ICLASS_VFMADDSUB231PD:     // AVX2
+    case XED_ICLASS_VFMADDSUB231PS:     // AVX2
+    case XED_ICLASS_VFMADDSUBPD:        // AVX2
+    case XED_ICLASS_VFMADDSUBPS:        // AVX2
+    case XED_ICLASS_VFNMADD132PD:       // AVX2
+    case XED_ICLASS_VFNMADD132PS:       // AVX2
+    case XED_ICLASS_VFNMADD132SD:       // AVX2
+    case XED_ICLASS_VFNMADD132SS:       // AVX2
+    case XED_ICLASS_VFNMADD213PD:       // AVX2
+    case XED_ICLASS_VFNMADD213PS:       // AVX2
+    case XED_ICLASS_VFNMADD213SD:       // AVX2
+    case XED_ICLASS_VFNMADD213SS:       // AVX2
+    case XED_ICLASS_VFNMADD231PD:       // AVX2
+    case XED_ICLASS_VFNMADD231PS:       // AVX2
+    case XED_ICLASS_VFNMADD231SD:       // AVX2
+    case XED_ICLASS_VFNMADD231SS:       // AVX2
+    case XED_ICLASS_VFNMADDPD:          // AVX2
+    case XED_ICLASS_VFNMADDPS:          // AVX2
+    case XED_ICLASS_VFNMADDSD:          // AVX2
+    case XED_ICLASS_VFNMADDSS:          // AVX2
+
+    case XED_ICLASS_VFMSUB132PD:        // AVX2
+    case XED_ICLASS_VFMSUB132PS:        // AVX2
+    case XED_ICLASS_VFMSUB132SD:        // AVX2
+    case XED_ICLASS_VFMSUB132SS:        // AVX2
+    case XED_ICLASS_VFMSUB213PD:        // AVX2
+    case XED_ICLASS_VFMSUB213PS:        // AVX2
+    case XED_ICLASS_VFMSUB213SD:        // AVX2
+    case XED_ICLASS_VFMSUB213SS:        // AVX2
+    case XED_ICLASS_VFMSUB231PD:        // AVX2
+    case XED_ICLASS_VFMSUB231PS:        // AVX2
+    case XED_ICLASS_VFMSUB231SD:        // AVX2
+    case XED_ICLASS_VFMSUB231SS:        // AVX2
+    case XED_ICLASS_VFMSUBADD132PD:     // AVX2
+    case XED_ICLASS_VFMSUBADD132PS:     // AVX2
+    case XED_ICLASS_VFMSUBADD213PD:     // AVX2
+    case XED_ICLASS_VFMSUBADD213PS:     // AVX2
+    case XED_ICLASS_VFMSUBADD231PD:     // AVX2
+    case XED_ICLASS_VFMSUBADD231PS:     // AVX2
+    case XED_ICLASS_VFMSUBADDPD:        // AVX2
+    case XED_ICLASS_VFMSUBADDPS:        // AVX2
+    case XED_ICLASS_VFMSUBPD:           // AVX2
+    case XED_ICLASS_VFMSUBPS:           // AVX2
+    case XED_ICLASS_VFMSUBSD:           // AVX2
+    case XED_ICLASS_VFMSUBSS:           // AVX2
+    case XED_ICLASS_VFNMSUB132PD:       // AVX2
+    case XED_ICLASS_VFNMSUB132PS:       // AVX2
+    case XED_ICLASS_VFNMSUB132SD:       // AVX2
+    case XED_ICLASS_VFNMSUB132SS:       // AVX2
+    case XED_ICLASS_VFNMSUB213PD:       // AVX2
+    case XED_ICLASS_VFNMSUB213PS:       // AVX2
+    case XED_ICLASS_VFNMSUB213SD:       // AVX2
+    case XED_ICLASS_VFNMSUB213SS:       // AVX2
+    case XED_ICLASS_VFNMSUB231PD:       // AVX2
+    case XED_ICLASS_VFNMSUB231PS:       // AVX2
+    case XED_ICLASS_VFNMSUB231SD:       // AVX2
+    case XED_ICLASS_VFNMSUB231SS:       // AVX2
+    case XED_ICLASS_VFNMSUBPD:          // AVX2
+    case XED_ICLASS_VFNMSUBPS:          // AVX2
+    case XED_ICLASS_VFNMSUBSD:          // AVX2
+    case XED_ICLASS_VFNMSUBSS:          // AVX2
         return IB_madd;
         
     case XED_ICLASS_VPMAXSB:            // AVX
