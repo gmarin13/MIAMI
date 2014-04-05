@@ -134,7 +134,10 @@ print_operands(xed_decoded_inst_t* xedd)
           case XED_OPERAND_REG6:
           case XED_OPERAND_REG7:
           case XED_OPERAND_REG8:
-#ifdef XED_OPERAND_REG9
+// PIN kits up to version 2.13-61206 (inclusive) included operands REG9 to REG 15
+// These have been removed from version 2.13-62141
+// No good way to test if these enum constants are defined or not
+#ifdef XED_OPERAND_REG9  // this is an enum constant, not visible to the preprocessor
           case XED_OPERAND_REG9:
           case XED_OPERAND_REG10:
           case XED_OPERAND_REG11:
@@ -272,6 +275,40 @@ GetNumberOfElements(xed_decoded_inst_t* inst, int operand)
       case XED_ICLASS_VCVTSS2SD:          // CONVERT
       case XED_ICLASS_VCVTSI2SD:          // CONVERT
       case XED_ICLASS_VCVTSI2SS:          // CONVERT
+
+      case XED_ICLASS_VFMADD132SD:        // AVX2
+      case XED_ICLASS_VFMADD132SS:        // AVX2
+      case XED_ICLASS_VFMADD213SD:        // AVX2
+      case XED_ICLASS_VFMADD213SS:        // AVX2
+      case XED_ICLASS_VFMADD231SD:        // AVX2
+      case XED_ICLASS_VFMADD231SS:        // AVX2
+      case XED_ICLASS_VFMADDSD:           // AVX2
+      case XED_ICLASS_VFMADDSS:           // AVX2
+      case XED_ICLASS_VFNMADD132SD:       // AVX2
+      case XED_ICLASS_VFNMADD132SS:       // AVX2
+      case XED_ICLASS_VFNMADD213SD:       // AVX2
+      case XED_ICLASS_VFNMADD213SS:       // AVX2
+      case XED_ICLASS_VFNMADD231SD:       // AVX2
+      case XED_ICLASS_VFNMADD231SS:       // AVX2
+      case XED_ICLASS_VFNMADDSD:          // AVX2
+      case XED_ICLASS_VFNMADDSS:          // AVX2
+
+      case XED_ICLASS_VFMSUB132SD:        // AVX2
+      case XED_ICLASS_VFMSUB132SS:        // AVX2
+      case XED_ICLASS_VFMSUB213SD:        // AVX2
+      case XED_ICLASS_VFMSUB213SS:        // AVX2
+      case XED_ICLASS_VFMSUB231SD:        // AVX2
+      case XED_ICLASS_VFMSUB231SS:        // AVX2
+      case XED_ICLASS_VFMSUBSD:           // AVX2
+      case XED_ICLASS_VFMSUBSS:           // AVX2
+      case XED_ICLASS_VFNMSUB132SD:       // AVX2
+      case XED_ICLASS_VFNMSUB132SS:       // AVX2
+      case XED_ICLASS_VFNMSUB213SD:       // AVX2
+      case XED_ICLASS_VFNMSUB213SS:       // AVX2
+      case XED_ICLASS_VFNMSUB231SD:       // AVX2
+      case XED_ICLASS_VFNMSUB231SS:       // AVX2
+      case XED_ICLASS_VFNMSUBSD:          // AVX2
+      case XED_ICLASS_VFNMSUBSS:          // AVX2
          num_elems = 1;
          break;
       default:
@@ -971,7 +1008,24 @@ XedInstToUopList(xed_decoded_inst_t* inst, InstrList *iList, void *pc)
           break;
     }
     if (special_handling)
+    {
+       // before returning, check if we have any unknown operation ...
+       if (iList)
+       {
+          InstrList::iterator iit = iList->begin();
+          for ( ; iit!=iList->end() ; ++iit)
+          {
+             if (iit->type == IB_unknown)
+             {
+                // list the xed decoded instructions
+                fprintf(stderr, "XedInstToUopList (special case): HELLO, MIAMI does not handle the following opcode. Please report this error to mgabi99@gmail.com\n");
+                debug_decode_instruction_at_pc(pc, xed_decoded_inst_get_length(inst));
+                break;
+             }
+          }
+       }
        return (res);
+    }
 
     // continue with regular handling
     iList->push_back(instruction_info());
@@ -981,6 +1035,12 @@ XedInstToUopList(xed_decoded_inst_t* inst, InstrList *iList, void *pc)
     InstrList::iterator mem_it = iList->end();
     
     primary_uop.type = GetInstrBin(inst);
+    if (primary_uop.type == IB_unknown)  // an unknown opcode
+    {
+       // list the xed decoded instructions
+       fprintf(stderr, "XedInstToUopList: HELLO, MIAMI does not handle the following opcode. Please report this error to mgabi99@gmail.com\n");
+       debug_decode_instruction_at_pc(pc, xed_decoded_inst_get_length(inst));
+    }
     primary_uop.exec_unit = GetExecUnit(inst);
     primary_uop.primary = true;
     
@@ -1146,7 +1206,10 @@ XedInstToUopList(xed_decoded_inst_t* inst, InstrList *iList, void *pc)
            case XED_OPERAND_REG6:
            case XED_OPERAND_REG7:
            case XED_OPERAND_REG8:
-#ifdef XED_OPERAND_REG9
+// PIN kits up to version 2.13-61206 (inclusive) included operands REG9 to REG 15
+// These have been removed from version 2.13-62141
+// No good way to test if these enum constants are defined or not
+#ifdef XED_OPERAND_REG9  // this is an enum constant, not visible to the preprocessor
            case XED_OPERAND_REG9:
            case XED_OPERAND_REG10:
            case XED_OPERAND_REG11:
@@ -1762,6 +1825,12 @@ int instruction_at_pc_transfers_control(void *pc, int len, int& ilen)
 
    ilen = xed_decoded_inst_get_length(&xedd);
    InstrBin ibin = GetInstrBin(&xedd);
+    if (ibin == IB_unknown)  // an unknown opcode
+    {
+       // list the xed decoded instructions
+       fprintf(stderr, "instruction_at_pc_transfers_control: HELLO, MIAMI does not handle the following opcode. Please report this error to mgabi99@gmail.com\n");
+       debug_decode_instruction_at_pc(pc, xed_decoded_inst_get_length(&xedd));
+    }
    return (InstrBinIsBranchType(ibin));
 }
 
