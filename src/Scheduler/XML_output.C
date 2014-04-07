@@ -259,13 +259,16 @@ MIAMI_Driver::dump_scope_pairs_xml_output (FILE* _out_fd,
       if (carriedMisses)
          for (i=0, i3=0 ; i<numLevels ; ++i, i3+=3)
          {
-            if (carriedMisses[i] > 0.0)
+            if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                     carriedMisses[i]>0.0)
                fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                      carriedMissesBase+i3, carriedMisses[i]);
-            if (irregMisses && irregMisses[i] > 0.0)
+            if (mem_level_has_irreg_carried_info && mem_level_has_irreg_carried_info[i] &&
+                     irregMisses && irregMisses[i]>0.0)
                fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                      carriedMissesBase+i3+1, irregMisses[i]);
-            if (fragMisses && fragMisses[i] > 0.0)
+            if (mem_level_has_frag_info && mem_level_has_frag_info[i] &&
+                     fragMisses && fragMisses[i]>0.0)
                fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                      carriedMissesBase+i3+2, fragMisses[i]);
          }
@@ -725,7 +728,8 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
          if (allCarriedMisses)
          {
             for (i=0 ; i<numLevels ; ++i)
-               if (allCarriedMisses[i] > 0)
+               if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                         allCarriedMisses[i]>0)
                   fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                         carriedMissesBase+i, allCarriedMisses[i]);
             if (! top_scope)
@@ -908,7 +912,8 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             fprintf (_out_fd, "%*s<UG n=\"@Loop Carried To\">\n", indent, "");
             if (cMisses)
                for (i=0 ; i<numLevels ; ++i)
-                  if (cMisses[i] > 0)
+                  if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                           cMisses[i]>0)
                      fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                           carriedMissesBase+i, cMisses[i]);
             dumpOneCarryMap (_out_fd, carriedMissesBase, dTo, carryMap, 
@@ -918,7 +923,8 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             fprintf (_out_fd, "%*s<UG n=\"@Loop Carried From\">\n", indent, "");
             if (cMisses)
                for (i=0 ; i<numLevels ; ++i)
-                  if (cMisses[i] > 0)
+                  if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                            cMisses[i]>0)
                      fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                           carriedMissesBase+i, cMisses[i]);
             dumpOneCarryMap (_out_fd, carriedMissesBase, dFrom, carryMap, 
@@ -981,7 +987,8 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             fprintf (_out_fd, "%*s<UG n=\"@LI Carried To\">\n", indent, "");
             if (cMisses)
                for (i=0 ; i<numLevels ; ++i)
-                  if (cMisses[i] > 0)
+                  if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                            cMisses[i]>0)
                      fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                              carriedMissesBase+i, cMisses[i]);
             dumpOneCarryMap (_out_fd, carriedMissesBase, dTo, carryMap, 
@@ -991,7 +998,8 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             fprintf (_out_fd, "%*s<UG n=\"@LI Carried From\">\n", indent, "");
             if (cMisses)
                for (i=0 ; i<numLevels ; ++i)
-                  if (cMisses[i] > 0)
+                  if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                            cMisses[i]>0)
                      fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                              carriedMissesBase+i, cMisses[i]);
             dumpOneCarryMap (_out_fd, carriedMissesBase, dFrom, carryMap, 
@@ -1281,15 +1289,6 @@ MIAMI_Driver::dumpOneReuseMap (FILE *_out_fd, MIAMIU::UiUiMap &TAshortNameMap,
             std::string namePrefix = "";
             if (loopCarried)
                namePrefix = "LC_";
-#if 0
-            if (pscope->getScopeType()==LOOP_SCOPE)
-            {
-               if (loopCarried)
-                  namePrefix = "LC_";
-               else
-                  namePrefix = "LI_";
-            }
-#endif
 
 #if USE_ALIEN_SCOPES
             fprintf (_out_fd, "%*s%s\n", indent, "", 
@@ -1446,7 +1445,8 @@ MIAMI_Driver::dumpOneCarryMap (FILE *_out_fd, int carryBaseIndex,
 
       for (i=0 ; i<numLevels ; ++i)
       {
-         if (dpit->second[i] > 0.0001)
+         if (mem_level_has_carried_info && mem_level_has_carried_info[i] &&
+                   dpit->second[i]>0.0001)
             fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%lg\"/>\n", indent, "", 
                   carryBaseIndex+i, dpit->second[i]);
       }
