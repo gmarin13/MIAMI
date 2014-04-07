@@ -252,10 +252,13 @@ Instruction Move:int,vec{256} template = I_Port[5]+U_FpBlend[1] | I_Port[0]+U_Fp
 Instruction Move{64}:fp,vec{256} template = I_Port[5]+U_FpBlend[1] | I_Port[0]+U_FpBlend[0];
 Instruction Move:fp template = I_Port[5]+U_FpBlend[1] | I_Port[0]+U_FpBlend[0];
 
-Instruction Copy:int template = I_Port[5]+U_ALU[2] | I_Port[1]+U_ALU[0] | I_Port[5]+U_ALU[0];
+Instruction Copy:int template = I_Port[5]+U_ALU[2] | I_Port[1]+U_ALU[1] | I_Port[0]+U_ALU[0];
 Instruction Copy:int,vec{128} template = I_Port[5]+U_ALU[2] | 
-                                         I_Port[1]+U_ALU[0] | 
-                                         I_Port[5]+U_ALU[0];
+                                         I_Port[1]+U_ALU[1] | 
+                                         I_Port[0]+U_ALU[0];
+/* See the comment for Move:int,vec{256} */
+Instruction Copy:int,vec{256} template = I_Port[5]+U_FpBlend[1] | I_Port[0]+U_FpBlend[0];
+
 Instruction Copy{64}:fp,vec{256} template = I_Port[5]+U_FpBlend[1] | I_Port[0]+U_FpBlend[0];
 Instruction Copy:fp template = I_Port[5]+U_FpBlend[1] | I_Port[0]+U_FpBlend[0];
 
