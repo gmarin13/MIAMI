@@ -736,6 +736,9 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
                delete[] allCarriedMisses;
          }
          
+         // do not print memory parallelism at this time. We do not 
+         // compute serial and exposed memory latency
+         /*
          float serialMemLat = 0;
          float exposedMemLat = 0;
          if (flat_data)
@@ -748,9 +751,6 @@ MIAMI_Driver::xml_dump_for_scope (FILE *_out_fd, ScopeImplementation *pscope,
             exposedMemLat = pscope->getExposedMemLat();
          }
          
-         // do not print memory parallelism at this time. We do not 
-         // compute serial and exposed memory latency
-         /*
          if (exposedMemLat > 0.1f)
             fprintf (_out_fd, "%*s  <M n=\"%d\" v=\"%g\"/>\n", indent, "", 
                   memParMapping, serialMemLat/exposedMemLat);

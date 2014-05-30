@@ -155,7 +155,6 @@ DGBuilder::build_graph(int numBlocks, CFG::Node** ba, float* fa, RSIList* innerR
       addrtype pc;
       if (!ba[i]->is_inner_loop ())
       {
-         int lastInst = -1;
          if (!ba[i]->isCfgEntry())
          {
             CFG::ForwardInstructionIterator iit(ba[i]);
@@ -164,7 +163,7 @@ DGBuilder::build_graph(int numBlocks, CFG::Node** ba, float* fa, RSIList* innerR
                pc = iit.Address();
                inMapper.clear();  // internal registers are valid only across 
                                   // micro-ops part of one native instruction
-               lastInst = build_node_for_instruction(pc, ba[i], fabs(fa[i]));
+               build_node_for_instruction(pc, ba[i], fabs(fa[i]));
                num_instructions += 1;
                if (ba[i]->is_delay_block())
                {
@@ -2602,7 +2601,6 @@ DGBuilder::findReuseGroupForNode (Node *node, unsigned int setIndex,
       return;
    }
    int refIsScalar = 0;
-   int refIsIndirect = 0;
    bool constantStride = false;
    coeff_t valueStride = 0;
    GFSliceVal _iterFormula;
@@ -2631,8 +2629,6 @@ DGBuilder::findReuseGroupForNode (Node *node, unsigned int setIndex,
       coeff_t valueNum;
       ucoeff_t valueDen;
       
-      if (_iterFormula.has_indirect_access())
-         refIsIndirect = 1;
       if (IsConstantFormula(_iterFormula, valueNum, valueDen))
       {
          constantStride = true;

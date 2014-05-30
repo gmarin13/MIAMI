@@ -194,7 +194,9 @@ LoadModule::loadOneRoutine(FILE *fd, uint32_t r)
    {fprintf(stderr, "ERROR: "err"\n"); goto load_error; }
 
    size_t res;
+#if DEBUG_CFG_COUNTS
    int ires = 0;
+#endif
    Routine *rout = NULL;
    
    addrtype _offset, _start, _end;
@@ -233,7 +235,10 @@ LoadModule::loadOneRoutine(FILE *fd, uint32_t r)
    )
 #endif
    // next parse the entries and the cfg
-   ires = rout->loadCFGFromFile(fd);
+#if DEBUG_CFG_COUNTS
+   ires = 
+#endif
+      rout->loadCFGFromFile(fd);
 #if DEBUG_CFG_COUNTS
    DEBUG_CFG(3,
       fprintf (stderr, "CFG loaded with result %d\n", ires);

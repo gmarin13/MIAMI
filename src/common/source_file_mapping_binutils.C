@@ -254,7 +254,6 @@ int
 source_file_info_open_image (const char *file_name, void** data)
 {
   bfd *abfd;
-  asection *section;
   char **matching;
   
   *data = 0;
@@ -284,8 +283,6 @@ source_file_info_open_image (const char *file_name, void** data)
      }
      return (-3);
   }
-
-  section = NULL;
 
   bfd_info *info = new bfd_info();  // use new to initialize the map
   // (struct bfd_info*)malloc(sizeof(struct bfd_info));

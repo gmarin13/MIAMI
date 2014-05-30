@@ -124,7 +124,8 @@ public:
       _vtset.clear();
       int newSize;
       _size = 0;
-      fread(&newSize, 4, 1, fd);
+      if (fread(&newSize, 4, 1, fd) < 1)
+         newSize = 0;
       for (int i=0 ; i<newSize ; ++i)
       {
          VarType val;
@@ -135,7 +136,8 @@ public:
             ++ _size;
          }
       }
-      fread (&_formula_access_mode, 4, 1, fd);
+      if (fread(&_formula_access_mode, 4, 1, fd) < 1)
+         _formula_access_mode = 0;
       _loaded = 1;
       _marker = 0;
       return 0;

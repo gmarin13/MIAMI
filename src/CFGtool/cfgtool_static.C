@@ -387,7 +387,6 @@ VOID AnalyzeTrace(TRACE trace, VOID *v)
       ADDRINT start_addr = BBL_Address(bbl);
       ADDRINT end_addr = start_addr + BBL_Size(bbl);
       INS lastIns = BBL_InsTail(bbl);
-      INS firstIns = BBL_InsHead(bbl);
 
       MIAMI::CFG::NodeType btype = MIAMI::CFG::MIAMI_CODE_BLOCK;
       if (BBL_NumIns(bbl)==1 && INS_Stutters(lastIns))   // a REP instruction

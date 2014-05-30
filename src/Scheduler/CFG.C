@@ -570,7 +570,7 @@ CFG::computeBBAndEdgeCounts()
    int num_failures = 0;
    Node *failNode = 0;
    Edge *failEdge = 0;
-   int64_t guessCounter = 0;
+//   int64_t guessCounter = 0;
    
    // while inNodes and outNodes are not empty, I need to check them to see if we can 
    // compute counts for new edges and propagate the counts further
@@ -1352,7 +1352,7 @@ CFG::computeBBAndEdgeCounts()
              num_failures = 0;
              failNode = 0;
              failEdge = 0;
-             guessCounter = *(guessNode->Counter());
+//             guessCounter = *(guessNode->Counter());
           }
        }  // inNodes and outNodes are empty
    }  // while inNodes or outNodes are not empty
