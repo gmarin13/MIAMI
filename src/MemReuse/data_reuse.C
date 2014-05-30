@@ -922,7 +922,6 @@ namespace MIAMI_MEM_REUSE
       unsigned long long crtDistance = 0;
       count_t crtCount = 0;
       dist_t limit1 = it->first;
-      dist_t limit2 = 0;
       count_t totalCount = 0;
       float crtAverage = it->first;
       FloatArray distances;
@@ -936,7 +935,6 @@ namespace MIAMI_MEM_REUSE
             crtDistance += ((unsigned long long)(it->first))*(it->second);
             crtCount += it->second;
             crtAverage = (float)crtDistance/crtCount;
-            limit2 = it->first;
             it++;
          }
          else
@@ -952,7 +950,6 @@ namespace MIAMI_MEM_REUSE
             crtCount = 0;
             crtAverage = (float)it->first;
             limit1 = it->first;
-            limit2 = 0;
          }
       }
       if (crtCount > 0)  // there is data not accounted for

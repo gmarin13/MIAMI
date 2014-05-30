@@ -130,8 +130,8 @@ $(SO_TOOLS): $(OBJS) $(SOMAIN_OBJS)
 # find static versions of the libraries, even if dynamic ones are available. 
 $(SA_TOOLS) : $(OBJS) $(SAMAIN_OBJS)
 	$(LINKER) -v $(SATOOL_LDFLAGS) $(LINK_DEBUG) $(LINK_EXE)$@ $(OBJS) $(SAMAIN_OBJS) $(TOOL_LPATHS) \
-	     $(SATOOL_LIBS) $(DBG) -lxed -lstdc++ -L${BINUTILS_HOME}/lib -L${BINUTILS_HOME}/lib64 \
-	     -Wl,-Bstatic -lm -lbfd -liberty -lz -Wl,--as-needed -Wl,-Bdynamic 
+	     $(DBG) -lxed -lstdc++ -L${BINUTILS_HOME}/lib -L${BINUTILS_HOME}/lib64 \
+	     -Wl,-Bstatic -lm -lbfd -liberty -lz -Wl,--as-needed -Wl,-Bdynamic $(SATOOL_LIBS) 
 
 $(SA_WRAPPER) : $(SA_TOOLS)
 	@sed -e 's/XTOOLVARX/$(TOOL_VAR)/g' -e 's/XTOOLLIBX/$(TOOL_ROOTS)$(SATOOL_SUFFIX)/g' $(BINSCRIPT) > $(BINDIR)$(TOOL_ROOTS)

@@ -376,7 +376,6 @@ Routine::RecordTraceRange(addrtype _start, addrtype _end)
       // Check if we need to split the old trace
       {
          tite = tits;
-         AddrPair *prevTrace = 0;
          addrtype bStart = tite->second.first,
                   bEnd   = tite->second.second;
          addrtype prevEnd = bStart;
@@ -384,7 +383,6 @@ Routine::RecordTraceRange(addrtype _start, addrtype _end)
          while (tite!=traceRanges.end() && bEnd<_end)
          {
             prevEnd = bEnd;
-            prevTrace = &tite->second;
             ++tite;
             if (tite != traceRanges.end()) 
             {

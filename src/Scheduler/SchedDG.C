@@ -3295,7 +3295,7 @@ SchedDG::DiscoverSCCs(Node *nn, unsigned int mm, NodeList &nodesStack, int *dfsI
 void
 SchedDG::findDependencyCycles()
 {
-   int res, i;
+   int i;
    if (HasAllFlags (DG_CYCLES_COMPUTED))   // cycles are already computed
       assert(! "SchedDG::findDependencyCycles invoked, but cycles were \
       computed before and not yet removed.");
@@ -3422,7 +3422,7 @@ SchedDG::findDependencyCycles()
             src_nn->tempVal = 1;
             edgesStack.push_back(ee);
             
-            res = findCycle (ee->sink(), mm, mm2, edgesStack, 
+            findCycle (ee->sink(), mm, mm2, edgesStack, 
                         all_cycles, 1, minIdx, 0, srcScc);
             src_nn->visit(mm-1);
             edgesStack.pop_back();
@@ -3451,7 +3451,7 @@ SchedDG::findDependencyCycles()
                  << ", with SCC Id=" << sccId << endl;
          )
 #endif
-         res = findCycle((*nlit), mm, mm2, edgesStack, all_cycles, 0, minIdx, 0, sccId);
+         findCycle((*nlit), mm, mm2, edgesStack, all_cycles, 0, minIdx, 0, sccId);
       }
       
       // after finding all Super Edges, prune unnecessary super edges.
@@ -12035,11 +12035,12 @@ SchedDG::draw_debug_graphics(const char* prefix, bool draw_reg_only,
       fout.close();
       assert(fout.good());
 
+/*
       stringstream dot_cmd;
       dot_cmd << "dot -Tps2 -o " << file_name_ps << " "
               << file_name << '\0';
       system(dot_cmd.str().c_str());
-//      delete dot_cmd.str();
+ */
    }
    for (i=0 ; i<=numberOfCycles() && i<=max_cycles ; ++i)
    {
@@ -12053,11 +12054,12 @@ SchedDG::draw_debug_graphics(const char* prefix, bool draw_reg_only,
       fout.close();
       assert(fout.good());
 
+/*
       stringstream dot_cmd;
       dot_cmd << "dot -Tps2 -o " << file_name_ps << " "
               << file_name << '\0';
-//      system(dot_cmd.str().c_str());
-//      delete dot_cmd.str();
+      system(dot_cmd.str().c_str());
+ */
    }
 #if 0
    sprintf(file_name, "%s_all_deps.dot", prefix);

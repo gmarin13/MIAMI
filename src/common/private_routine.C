@@ -615,12 +615,10 @@ PrivateRoutine::discover_CFG(addrtype pc)
 //         AddBlock(lpc+1, pc, PrivateCFG::MIAMI_CODE_BLOCK, 0);
          
          // add a loop edge for the REP instruction
-         PrivateCFG::Edge *ee = AddPotentialEdge(pc, lpc, PrivateCFG::MIAMI_DIRECT_BRANCH_EDGE);
-//         ee->setCounterEdge();
+         AddPotentialEdge(pc, lpc, PrivateCFG::MIAMI_DIRECT_BRANCH_EDGE);
          // I also need to create a bypass edge to go around the REP instruction
          // in case that its count is set to zero.
-         ee = AddPotentialEdge(lpc, pc, PrivateCFG::MIAMI_BYPASS_EDGE);
-//         ee->setCounterEdge();
+         AddPotentialEdge(lpc, pc, PrivateCFG::MIAMI_BYPASS_EDGE);
       } else  // no REP instruction found, add a single block
          AddBlock(saddr, pc, PrivateCFG::MIAMI_CODE_BLOCK, 0);
       

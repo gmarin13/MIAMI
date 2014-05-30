@@ -693,7 +693,7 @@ ResolveBranchTargetFormula(const GFSliceVal& targetF, PrivateCFG *cfg,
          // additional scaling factor; For now, try to infer as much info as possible
          addrtype table_addr = 0;
          int num_entries = 1;
-         register_info index = MIAMI_NO_REG;
+//         register_info index = MIAMI_NO_REG;
          width_t table_entry_width = 0; // how large is an entry into the table (in bits)
          coeff_t index_scale = 1;
          coeff_t load_scale = 1;
