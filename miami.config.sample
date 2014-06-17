@@ -13,7 +13,7 @@ BINUTILS_HOME ?= ${HOME}/binutils-2.23
 
 
 # We are attempting to discover the MIAMI root directory and store this 
-# this value in the MIAMI_HOME variable.
+# value in the MIAMI_HOME variable.
 # This approach may require make version 3.81 or newer. If it does not work 
 # correctly on your system, set MIAMI_HOME to point to the correct MIAMI
 # root directory by hand. You can type "make info" to see the value of 
