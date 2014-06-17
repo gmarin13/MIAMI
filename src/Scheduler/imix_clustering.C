@@ -127,6 +127,7 @@ IClassToImixType(const InstructionClass& iclass, int& count)
       
       default:                assert(!"unknown Instruction Bin");
    }
+   return (IMIX_INVALID);
 }
 
 }  /* namespace MIAMI */

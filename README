@@ -3,8 +3,9 @@ ABOUT MIAMI:
 MIAMI (Machine Independent Application Models for performance Insight) is a
 collection of tools for automatic construction of application centric,
 thread-level, performance models, focused on facilitating performance
-diagnosis and performance prediction. At its lowest level, MIAMI uses static 
-and dynamic analysis of fully optimized x86-64 application binaries.
+prediction and micro-architecture level performance diagnosis. At its lowest
+level, MIAMI uses static and dynamic analysis of fully optimized x86-64 
+application binaries.
 
 
 MOTIVATION:
@@ -40,7 +41,7 @@ guesswork traditionally involved in uncovering tuning opportunities.
 
 INSTALLATION:
 
-For building instructions see the INSTALL file in this folder.
+For building instructions, see the INSTALL file in this folder.
 
 
 USE INSTRUCTIONS:
@@ -51,4 +52,4 @@ documentation in the doc/ subfolder.
 
 CONTACT INFORMATION:
 
-For other questions, contact Gabriel Marin <mgabi99@gmail.com>.
+For other questions, contact Gabriel Marin <mgabi99 .at. gmail>.

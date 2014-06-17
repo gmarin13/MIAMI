@@ -26,12 +26,6 @@
 #include "printable_class.h"
 #include "loadable_class.h"
 
-#ifdef __sparc
-#include <stdcomp.h>
-#else
-#define _RWSTD_COMPLEX_DEFAULT(x)  = x
-#endif
-
 namespace MIAMI 
 {
 
@@ -44,9 +38,9 @@ namespace MIAMI
 
 
 template<class VarType,
-         class Compare _RWSTD_COMPLEX_DEFAULT ( std::less<VarType> ),
-         class NeutralType _RWSTD_COMPLEX_DEFAULT ( VarType ),
-         NeutralType &neutralValue _RWSTD_COMPLEX_DEFAULT ( 0 ) >
+         class Compare,
+         class NeutralType,
+         const NeutralType &neutralValue >
 class GeneralFormula : public PrintableClass, public LoadableClass
 {
 public:
@@ -628,9 +622,11 @@ private:
    int _marker;
    AddrIntSet _indirect_pcs;
    static int top_marker;
-//   typename VTSet::iterator _git;
-//   NeutralType neutral_value;
 };
+
+// initialize the static template member
+template<class VarType, class Compare, class NeutralType, const NeutralType &neutralValue>
+      int GeneralFormula<VarType, Compare, NeutralType, neutralValue>::top_marker = 0;
 
 }  /* namespace MIAMI */
 

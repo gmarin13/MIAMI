@@ -26,10 +26,6 @@ namespace MIAMI
 RefFormulas *defaultRFP = 0;
 coeff_t defaultZeroCoeff = 0;
 
-// initialize the static template member
-template<class VarType, class Compare, class NeutralType, NeutralType &neutralValue>
-      int GeneralFormula<VarType, Compare, NeutralType, neutralValue>::top_marker = 0;
-
 #ifndef min
 #define min(x,y)  ((x)<(y)?(x):(y))
 #endif

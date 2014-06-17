@@ -231,7 +231,6 @@ namespace MIAMI
 
 extern coeff_t defaultZeroCoeff;
 typedef GeneralFormula<sliceVal, compareSliceVals, coeff_t, defaultZeroCoeff> GFSliceVal;
-//typedef GeneralFormula<sliceVal, compareSliceVals, int> GFSliceVal;
 // GFSliceVal represents one symbolic formula which has multiple sliceVal terms
 
 // Store formulas for all memory instructions into a hash map. For this, I will

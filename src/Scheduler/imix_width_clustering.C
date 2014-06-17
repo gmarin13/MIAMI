@@ -160,6 +160,7 @@ IClassToImixWType(const InstructionClass& iclass, int& count)
       
       default:                assert(!"unknown Instruction Bin");
    }
+   return (IMIXW_INVALID);
 }
 
 IWidthType

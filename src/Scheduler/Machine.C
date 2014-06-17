@@ -109,6 +109,7 @@ Machine::computeLatency(addrtype pc, addrtype reloc, const InstructionClass& _so
            pc, _source.ToString().c_str());
       debug_decode_instruction_at_pc((void*)(pc+reloc), 100);
       assert (!"no latency information for this instruction class");
+      return (0);
    } else
       return (temp->getMinLatency (_sink, templateIdx));
 }

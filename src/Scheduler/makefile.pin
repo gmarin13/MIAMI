@@ -131,7 +131,7 @@ $(SO_TOOLS): $(OBJS) $(SOMAIN_OBJS)
 $(SA_TOOLS) : $(OBJS) $(SAMAIN_OBJS)
 	$(LINKER) -v $(SATOOL_LDFLAGS) $(LINK_DEBUG) $(LINK_EXE)$@ $(OBJS) $(SAMAIN_OBJS) $(TOOL_LPATHS) \
 	     $(DBG) -lxed -lstdc++ -L${BINUTILS_HOME}/lib -L${BINUTILS_HOME}/lib64 \
-	     -Wl,-Bstatic -lm -lbfd -liberty -lz -Wl,--as-needed -Wl,-Bdynamic $(SATOOL_LIBS) 
+	     -Wl,-Bstatic -lbfd -liberty -Wl,--as-needed -Wl,-Bdynamic -lm -lz $(SATOOL_LIBS) 
 
 $(SA_WRAPPER) : $(SA_TOOLS)
 	@sed -e 's/XTOOLVARX/$(TOOL_VAR)/g' -e 's/XTOOLLIBX/$(TOOL_ROOTS)$(SATOOL_SUFFIX)/g' $(BINSCRIPT) > $(BINDIR)$(TOOL_ROOTS)

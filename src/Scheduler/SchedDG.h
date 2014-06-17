@@ -339,7 +339,7 @@ public:
     bool isInstructionNode() const { return (type>=0); }
     bool is_intrinsic_type() const { return (type == IB_intrinsic); }
     
-    const int memoryOpIndex() const  { return (memopidx); }
+    int memoryOpIndex() const  { return (memopidx); }
     void setMemoryOpIndex(int idx)   { memopidx = idx; }
     
     friend class SchedDG;

@@ -1017,7 +1017,6 @@ namespace MIAMI_MEM_REUSE
       // reuse patterns and distances, one image at a time.
       // I must convert instruction and scope indices into load offsets;
       // All profile data is in container imgData.
-      typedef std::vector<long> LongVector;
       uint32_t nImages = maxImgs;
       int64_t *fOffsets = new int64_t[nImages];
       for (i=0 ; i<nImages ; ++i)
