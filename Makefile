@@ -1,8 +1,13 @@
 
 include miami.config
 MIAMI_TARGET ?= $(MIAMI_HOME)
+VAR_FILES = $(wildcard $(MIAMI_TARGET)/etc/vars/vars_*)
 
 all:
+	@# remove any existing individual vars files
+ifneq ($(VAR_FILES),)
+	rm $(VAR_FILES)
+endif
 	cd src && $(MAKE) $@ MIAMI_KIT=1
 ifneq ($(MIAMI_TARGET),$(MIAMI_HOME))
 	@echo "Installing out of tree"
