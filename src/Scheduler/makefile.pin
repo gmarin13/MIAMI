@@ -49,7 +49,6 @@ TARJ_OBJS = TarjanIntervals.o MiamiRIFG.o UnionFindUniverse.o
 SO_TOOLS = $(TOOL_ROOTS:%=$(EXEDIR)%$(PINTOOL_SUFFIX)) 
 SA_TOOLS = $(TOOL_ROOTS:%=$(EXEDIR)%$(SATOOL_SUFFIX)) 
 SA_WRAPPER = $(TOOL_ROOTS:%=$(BINDIR)%) 
-TOOLS = $(SO_TOOLS) $(SA_TOOLS) $(SA_WRAPPER)
 
 OBJS = $(SCHEDULER_OBJS:%=$(OBJDIR)$(TOOL_OBJ_DIR)/%) \
  $(COMMON_OBJS:%=$(OBJDIR)common/%) $(PIN_COMMON_OBJS:%=$(OBJDIR)pinobj/%) \
@@ -64,7 +63,12 @@ OPT_OBJS = $(OBJS:.o=.oo)
 YACC = bison
 FLEX = flex
 
-MAIN_PIN_OBJS = $(SOMAIN_OBJS) $(SAMAIN_OBJS)
+TOOLS = $(SA_TOOLS) $(SA_WRAPPER)
+MAIN_PIN_OBJS = $(SAMAIN_OBJS)
+ifeq ($(COMPILE_MIAMI_SO),"yes")
+   TOOLS += $(SO_TOOLS)
+   MAIN_PIN_OBJS += $(SOMAIN_OBJS)
+endif
 
 # finds files for the compiling rules
 vpath %.C $(MIAMI_HOME)/src/Scheduler
@@ -112,7 +116,7 @@ machdesc.tab.h: machine_description.y
 machdesc.lex.c: machine_description.l
 	$(FLEX) -t machine_description.l > machdesc.lex.c
                         
-$(TOOLS): $(OBJS) $(SOMAIN_OBJS) $(SAMAIN_OBJS)
+$(TOOLS): $(OBJS) $(MAIN_PIN_OBJS)
 
 $(SO_TOOLS): $(OBJS) $(SOMAIN_OBJS)
 	$(LINKER) -v $(TOOL_LDFLAGS) $(LINK_DEBUG) $(LINK_EXE)$@ $(OBJS) $(SOMAIN_OBJS) $(TOOL_LPATHS) \
